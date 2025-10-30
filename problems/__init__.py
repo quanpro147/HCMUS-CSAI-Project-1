@@ -1,7 +1,3 @@
-"""
-Optimization problems package.
-"""
-
 from .base_problem import BaseProblem, ContinuousProblem, DiscreteProblem
 from .continuous_prob import (
     SphereFunction,
