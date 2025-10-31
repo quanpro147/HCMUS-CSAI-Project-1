@@ -8,14 +8,16 @@ class HillClimbing(TraditionalOptimizer):
     Hill Climbing Algorithm implementation.
     """
     
-    def __init__(self, name: str = "Hill Climbing", step_size: float = 0.1):
+    def __init__(self, max_neighbors=None, step_size=None, name: str = "Hill Climbing"):
         """
         Args:
-            name: Tên của thuật toán
+            max_neighbors: Số lượng neighbors tối đa để thử mỗi iteration
             step_size: Kích thước bước di chuyển khi tạo neighbor
+            name: Tên của thuật toán
         """
         super().__init__(name)
-        self.step_size = step_size
+        self.max_neighbors = max_neighbors
+        self.step_size = step_size if step_size is not None else 0.1
         
     def optimize(self, problem, max_iter: int = 100, **kwargs) -> Tuple[Any, float]:
         """

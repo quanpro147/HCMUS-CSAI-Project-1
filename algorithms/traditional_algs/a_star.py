@@ -1,5 +1,5 @@
 # Kiên
-from base_optimizer import TraditionalOptimizer
+from ..base_optimizer import TraditionalOptimizer
 import numpy as np
 
 class AStar(TraditionalOptimizer):

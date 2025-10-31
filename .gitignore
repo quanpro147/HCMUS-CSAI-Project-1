@@ -36,16 +36,15 @@ env/
 .ipynb_checkpoints
 
 # Results and Logs
-results/**/*.json
-results/**/*.csv
-results/**/*.png
-results/**/*.pdf
+results/*.json
+results/*.csv
+results/*.png
+results/*.pdf
 logs/*.log
 logs/*.json
 
 # Keep directory structure
 !results/.gitkeep
-!results/*/.gitkeep
 
 # OS
 .DS_Store
