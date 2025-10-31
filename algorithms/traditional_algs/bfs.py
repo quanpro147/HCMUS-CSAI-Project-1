@@ -1,5 +1,5 @@
 # Khoa
-from base_optimizer import TraditionalOptimizer
+from ..base_optimizer import TraditionalOptimizer
 import numpy as np
 
 class BFS(TraditionalOptimizer):

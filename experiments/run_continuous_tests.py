@@ -22,7 +22,7 @@ from problems import (
 from algorithms import FireflyAlgorithm
 # from algorithms import PSO
 # from algorithms import ABC
-# from algorithms import HillClimbing
+from algorithms import HillClimbing
 
 
 class ContinuousExperiment:
@@ -35,7 +35,7 @@ class ContinuousExperiment:
                  problems: List,
                  n_runs: int = 30,
                  max_iter: int = 100,
-                 results_dir: str = "results/continuous"):
+                 results_dir: str = "results"):
         """
         Args:
             algorithms: Danh sách các thuật toán cần test
@@ -82,7 +82,7 @@ class ContinuousExperiment:
         Returns:
             Dict chứa tất cả kết quả và statistics
         """
-        print(f"\n  Testing {algorithm.name} on {problem.name}...")
+        print(f"\nTesting {algorithm.name} on {problem.prob_name}...")
         
         all_results = []
         
@@ -98,7 +98,7 @@ class ContinuousExperiment:
         
         stats = {
             'algorithm': algorithm.name,
-            'problem': problem.name,
+            'problem': problem.prob_name,
             'n_runs': self.n_runs,
             'max_iter': self.max_iter,
             
@@ -147,23 +147,18 @@ class ContinuousExperiment:
         """
         Chạy tất cả experiments: tất cả thuật toán trên tất cả bài toán.
         """
-        print("="*80)
         print("RUNNING CONTINUOUS OPTIMIZATION EXPERIMENTS")
-        print("="*80)
         print(f"Number of algorithms: {len(self.algorithms)}")
         print(f"Number of problems: {len(self.problems)}")
         print(f"Runs per experiment: {self.n_runs}")
         print(f"Max iterations: {self.max_iter}")
-        print("="*80)
         
         start_time = time.time()
         
         # Chạy từng problem
         for problem in self.problems:
-            print(f"\n{'='*80}")
-            print(f"Problem: {problem.name} (dim={problem.dim})")
-            print(f"{'='*80}")
-            
+            print(f"\nProblem: {problem.prob_name} (dim={problem.dim})")
+
             problem_results = {}
             
             # Chạy từng thuật toán
@@ -172,14 +167,28 @@ class ContinuousExperiment:
                 problem_results[algorithm.name] = stats
             
             # Lưu kết quả
-            self.results[problem.name] = problem_results
+            self.results[problem.prob_name] = problem_results
         
         total_time = time.time() - start_time
-        
-        print(f"\n{'='*80}")
-        print(f"ALL EXPERIMENTS COMPLETED!")
+
+        print(f"\nALL EXPERIMENTS COMPLETED!")
         print(f"Total time: {total_time:.2f} seconds ({total_time/60:.2f} minutes)")
-        print(f"{'='*80}")
+    
+    def run(self):
+        """
+        Method chính để chạy toàn bộ workflow: run -> summary -> save.
+        Chỉ cần gọi method này từ main.py
+        """
+        # 1. Chạy experiments
+        self.run_all_experiments()
+        
+        # 2. In summary
+        self.print_summary()
+        
+        # 3. Lưu kết quả
+        filepath = self.save_results()
+        
+        return filepath
         
     def save_results(self, filename: str = None):
         """
@@ -187,14 +196,14 @@ class ContinuousExperiment:
         """
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"continuous_results_{timestamp}.json"
+            filename = f"results_{timestamp}.json"
         
         filepath = os.path.join(self.results_dir, filename)
         
         with open(filepath, 'w') as f:
             json.dump(self.results, f, indent=4)
         
-        print(f"\n✅ Results saved to: {filepath}")
+        print(f"\nResults saved to: {filepath}")
         
         return filepath
     
@@ -202,12 +211,10 @@ class ContinuousExperiment:
         """
         In tóm tắt kết quả.
         """
-        print("\n" + "="*80)
         print("EXPERIMENT SUMMARY")
-        print("="*80)
         
         for problem_name, problem_results in self.results.items():
-            print(f"\n📊 {problem_name}:")
+            print(f"\n {problem_name}:")
             print(f"{'Algorithm':<25} {'Mean Fitness':<15} {'Std':<12} {'Best':<12} {'Time (s)':<10}")
             print("-"*80)
             
@@ -250,14 +257,14 @@ def main():
         FireflyAlgorithm(population_size=30, beta0=1.0, gamma=1.0, alpha=0.2),
         # PSO(population_size=30, w=0.7, c1=1.5, c2=1.5),
         # ABC(n_bees=40),
-        # HillClimbing(step_size=0.1),
+        HillClimbing(step_size=0.1),
     ]
     
     # 3. Tạo experiment
     experiment = ContinuousExperiment(
         algorithms=algorithms,
         problems=problems,
-        n_runs=10,  # Bắt đầu với 10 runs, sau tăng lên 30
+        n_runs=10, 
         max_iter=100
     )
     
@@ -269,8 +276,6 @@ def main():
     
     # 6. Lưu kết quả
     experiment.save_results()
-    
-    print("\n✅ Experiment completed successfully!")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from algorithms.base_optimizer import SwarmOptimizer
+from ..base_optimizer import SwarmOptimizer
 import numpy as np
 
 class FireflyAlgorithm(SwarmOptimizer):
