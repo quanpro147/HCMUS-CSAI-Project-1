@@ -1,25 +1,23 @@
 import numpy as np
 import math
 from ..base_optimizer import SwarmOptimizer
+from config import ALGORITHM_PARAMS
 
 
 class CuckooSearch(SwarmOptimizer):
 
-    def __init__(self, population_size: int = 25, pa: float = 0.25, alpha: float = 0.01):
-        """
-        Args:
-            population_size: số lượng tổ (nest)
-            pa: xác suất loại bỏ tổ (discovery rate)
-            alpha: hệ số bước (step size) cho Levy flight
-        """
+    def __init__(self, population_size=None, pa=None, alpha=None):
+        # Lấy tham số từ config nếu không được truyền vào
+        cs_params = ALGORITHM_PARAMS.get('cs', {})
+        population_size = population_size if population_size is not None else cs_params.get('population_size', 25)
+        pa = pa if pa is not None else cs_params.get('pa', 0.25)
+        alpha = alpha if alpha is not None else cs_params.get('alpha', 0.01)
+        
         super().__init__(name="Cuckoo Search", population_size=population_size)
         self.pa = pa
         self.alpha = alpha
 
     def _levy_flight(self, size, beta=1.5):
-        """
-        Sinh bước Levy flight cho tìm kiếm toàn cục.
-        """
         sigma_u = (
             (math.gamma(1 + beta) * np.sin(np.pi * beta / 2))
             / (math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))
@@ -27,51 +25,38 @@ class CuckooSearch(SwarmOptimizer):
 
         u = np.random.normal(0, sigma_u, size)
         v = np.random.normal(0, 1, size)
-        step = u / (np.abs(v) ** (1 / beta))
-        return step
+        return u / (np.abs(v) ** (1 / beta))
 
     def optimize(self, problem, max_iter=100, **kwargs):
-        """
-        Thực hiện tối ưu hóa bằng thuật toán Cuckoo Search.
-        Args:
-            problem: đối tượng bài toán có hàm evaluate() và random_solution()
-            max_iter: số vòng lặp tối đa
-        """
-        # Khởi tạo quần thể ban đầu
         self._initialize_population(problem)
         n = self.population_size
+        dim = self.population.shape[1]
 
-        # Lặp tối ưu
         for t in range(max_iter):
-            # Tạo tổ mới bằng Levy flight
-            for i in range(n):
-                current = self.population[i].copy()
-                step = self._levy_flight(size=current.shape)  # sinh vector bước
-                new_solution = current + self.alpha * step * (current - self.best_solution)
+            # === Levy flight vectorized ===
+            steps = self._levy_flight((n, dim))
+            new_population = self.population + self.alpha * steps * (self.population - self.best_solution)
+            new_population = problem.clip_solution(new_population)
 
-                # Giới hạn nghiệm trong phạm vi của problem (nếu có)
-                new_solution = problem.clip_solution(new_solution)
+            # Evaluate all new solutions at once
+            new_fitness = np.array([problem.evaluate(sol) for sol in new_population])
+            self.function_evaluations += n
 
-                # Đánh giá
-                new_fitness = problem.evaluate(new_solution)
-                self.function_evaluations += 1
+            # Replace if better
+            improved = new_fitness < self.fitness_values
+            self.population[improved] = new_population[improved]
+            self.fitness_values[improved] = new_fitness[improved]
 
-                # Thay thế nếu tốt hơn
-                if new_fitness < self.fitness_values[i]:
-                    self.population[i] = new_solution
-                    self.fitness_values[i] = new_fitness
-
-            # Loại bỏ tổ xấu theo xác suất pa
+            # === Abandon worst nests ===
             abandon_mask = np.random.rand(n) < self.pa
-            for i in range(n):
-                if abandon_mask[i]:
-                    new_nest = problem.random_solution()
-                    new_fit = problem.evaluate(new_nest)
-                    self.population[i] = new_nest
-                    self.fitness_values[i] = new_fit
-                    self.function_evaluations += 1
+            if np.any(abandon_mask):
+                new_nests = np.array([problem.random_solution() for _ in range(np.sum(abandon_mask))])
+                new_fits = np.array([problem.evaluate(sol) for sol in new_nests])
+                self.population[abandon_mask] = new_nests
+                self.fitness_values[abandon_mask] = new_fits
+                self.function_evaluations += np.sum(abandon_mask)
 
-            # Cập nhật nghiệm tốt nhất
+            # === Update global best ===
             best_idx = np.argmin(self.fitness_values)
             if self.fitness_values[best_idx] < self.best_fitness:
                 self.best_fitness = self.fitness_values[best_idx]

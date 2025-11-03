@@ -1,8 +1,3 @@
-"""
-Run experiments on continuous optimization problems.
-So sánh các thuật toán Swarm Intelligence vs Traditional trên bài toán liên tục.
-"""
-
 import numpy as np
 import json
 import time
@@ -20,8 +15,8 @@ from problems import (
 
 # Import algorithms
 from algorithms import FireflyAlgorithm
-# from algorithms import PSO
-# from algorithms import ABC
+from algorithms import ParticleSwarmOptimization
+from algorithms import ArtificialBeeColony
 from algorithms import HillClimbing
 
 
@@ -96,6 +91,11 @@ class ContinuousExperiment:
         iterations_values = [r['iterations'] for r in all_results]
         evaluations_values = [r['function_evaluations'] for r in all_results]
         
+        # Get convergence curve and convert to list if needed
+        best_convergence = all_results[np.argmin(fitness_values)]['convergence_curve']
+        if isinstance(best_convergence, np.ndarray):
+            best_convergence = best_convergence.tolist()
+        
         stats = {
             'algorithm': algorithm.name,
             'problem': problem.prob_name,
@@ -111,7 +111,7 @@ class ContinuousExperiment:
                 'median': float(np.median(fitness_values)),
                 'q25': float(np.percentile(fitness_values, 25)),
                 'q75': float(np.percentile(fitness_values, 75)),
-                'all_values': fitness_values
+                'all_values': [float(v) for v in fitness_values]  # Convert to list of floats
             },
             
             # Time statistics
@@ -120,7 +120,7 @@ class ContinuousExperiment:
                 'std': float(np.std(time_values)),
                 'min': float(np.min(time_values)),
                 'max': float(np.max(time_values)),
-                'all_values': time_values
+                'all_values': [float(t) for t in time_values]  # Convert to list of floats
             },
             
             # Other metrics
@@ -132,7 +132,7 @@ class ContinuousExperiment:
             },
             
             # Convergence curves (lấy từ run tốt nhất)
-            'best_run_convergence': all_results[np.argmin(fitness_values)]['convergence_curve'],
+            'best_run_convergence': best_convergence,
             
             # Error from optimal
             'error_from_optimal': {
@@ -255,8 +255,8 @@ def main():
     print("Setting up algorithms...")
     algorithms = [
         FireflyAlgorithm(population_size=30, beta0=1.0, gamma=1.0, alpha=0.2),
-        # PSO(population_size=30, w=0.7, c1=1.5, c2=1.5),
-        # ABC(n_bees=40),
+        ParticleSwarmOptimization(population_size=30, w=0.7, c1=1.5, c2=1.5),
+        ArtificialBeeColony(n_bees=40),
         HillClimbing(step_size=0.1),
     ]
     

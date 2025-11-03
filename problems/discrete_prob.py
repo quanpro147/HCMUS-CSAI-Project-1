@@ -28,7 +28,7 @@ class TravelingSalesmanProblem(DiscreteProblem):
         else:
             self.distance_matrix = self._generate_distance_matrix(seed)
         self.optimal_value = None
-        self.coords = None  # Lưu tọa độ các thành phố nếu được tạo ngẫu nhiên
+        self.coords = None
 
     def _generate_distance_matrix(self, seed: int = None) -> np.ndarray:
         """
