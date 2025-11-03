@@ -1,7 +1,8 @@
 from ..base_optimizer import SwarmOptimizer
 import numpy as np
-from typing import Any, Tuple
+from typing import Any, Tuple, List
 from problems.discrete_prob import TravelingSalesmanProblem as TSP
+from config import ALGORITHM_PARAMS
 
 
 class AntColonyOptimization(SwarmOptimizer):
@@ -10,11 +11,11 @@ class AntColonyOptimization(SwarmOptimizer):
     """
     
     def __init__(self, name: str = "Ant Colony Optimization", 
-                 population_size: int = 20,
-                 alpha: float = 1.0, 
-                 beta: float = 2.0, 
-                 evaporation: float = 0.5,
-                 pheromone_scale: float = 100):
+                 population_size=None,
+                 alpha=None, 
+                 beta=None, 
+                 evaporation=None,
+                 pheromone_scale=None):
         """
         Args:
             name: Tên thuật toán
@@ -24,6 +25,14 @@ class AntColonyOptimization(SwarmOptimizer):
             evaporation: Tỷ lệ bay hơi pheromone (ρ)
             pheromone_scale: Hệ số Q trong công thức cập nhật pheromone
         """
+        # Lấy tham số từ config nếu không được truyền vào
+        aco_params = ALGORITHM_PARAMS.get('aco', {})
+        population_size = population_size if population_size is not None else aco_params.get('population_size', 20)
+        alpha = alpha if alpha is not None else aco_params.get('alpha', 1.0)
+        beta = beta if beta is not None else aco_params.get('beta', 2.0)
+        evaporation = evaporation if evaporation is not None else aco_params.get('evaporation', 0.5)
+        pheromone_scale = pheromone_scale if pheromone_scale is not None else aco_params.get('pheromone_scale', 100)
+        
         super().__init__(name, population_size)
         self.alpha = alpha
         self.beta = beta
@@ -124,6 +133,17 @@ class AntColonyOptimization(SwarmOptimizer):
         for tour, length in zip(tours, lengths):
             for i in range(len(tour)):
                 self.pheromone[tour[i], tour[(i+1)%len(tour)]] += self.Q / length
+
+    def heuristic(self, current_city: int, unvisited: List[int]) -> float:
+        """
+        Heuristic dùng trong A* — ước lượng khoảng cách còn lại.
+        Ở đây dùng min khoảng cách nhân với số thành phố còn lại.
+        """
+        if not unvisited:
+            return self.distance_matrix[current_city, 0] 
+        min_dist = min(self.distance_matrix[current_city, city] for city in unvisited)
+        return min_dist * len(unvisited)
+
     
     def reset(self):
         """Reset trạng thái của thuật toán."""

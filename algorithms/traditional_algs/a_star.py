@@ -1,12 +1,10 @@
 # Kiên
-from ..base_optimizer import TraditionalOptimizer
 import numpy as np
 import heapq  # Dùng Hàng đợi ưu tiên (Priority Queue)
-from ...problems.discrete_prob import DiscreteProblem # Import rõ ràng để type hint
+from ..base_optimizer import TraditionalOptimizer
+from problems.discrete_prob import DiscreteProblem
 
-# ==============================================================================
-# Lớp Helper cho A* (Phải nằm ngoài class AStar)
-# ==============================================================================
+
 class AStarNode:
     """Lớp lưu trữ thông tin của một nút trên đồ thị/lưới."""
     def __init__(self, f: float, h: float, state: tuple, parent: 'AStarNode' = None, g: float = 0):

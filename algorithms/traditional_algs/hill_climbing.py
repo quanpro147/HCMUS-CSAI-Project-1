@@ -1,6 +1,7 @@
 from ..base_optimizer import TraditionalOptimizer
 import numpy as np
 from typing import Any, Tuple
+from config import ALGORITHM_PARAMS
 
 
 class HillClimbing(TraditionalOptimizer):
@@ -15,9 +16,14 @@ class HillClimbing(TraditionalOptimizer):
             step_size: Kích thước bước di chuyển khi tạo neighbor
             name: Tên của thuật toán
         """
+        # Lấy tham số từ config nếu không được truyền vào
+        hc_params = ALGORITHM_PARAMS.get('hill_climbing', {})
+        max_neighbors = max_neighbors if max_neighbors is not None else hc_params.get('max_neighbors', 20)
+        step_size = step_size if step_size is not None else hc_params.get('step_size', 0.1)
+        
         super().__init__(name)
         self.max_neighbors = max_neighbors
-        self.step_size = step_size if step_size is not None else 0.1
+        self.step_size = step_size
         
     def optimize(self, problem, max_iter: int = 100, **kwargs) -> Tuple[Any, float]:
         """

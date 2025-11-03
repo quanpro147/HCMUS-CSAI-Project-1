@@ -1,6 +1,7 @@
 from ..base_optimizer import SwarmOptimizer
 import numpy as np
 from typing import Any, Tuple
+from config import ALGORITHM_PARAMS
 
 
 class ParticleSwarmOptimization(SwarmOptimizer):
@@ -10,10 +11,10 @@ class ParticleSwarmOptimization(SwarmOptimizer):
 
     def __init__(self, 
                  name: str = "Particle Swarm Optimization",
-                 population_size: int = 30,
-                 w: float = 0.7,          # Hệ số quán tính
-                 c1: float = 1.5,         # Hệ số học hỏi cá nhân
-                 c2: float = 1.5):        # Hệ số học hỏi xã hội
+                 population_size=None,
+                 w=None,          # Hệ số quán tính
+                 c1=None,         # Hệ số học hỏi cá nhân
+                 c2=None):        # Hệ số học hỏi xã hội
         """
         Args:
             name: Tên thuật toán
@@ -22,6 +23,13 @@ class ParticleSwarmOptimization(SwarmOptimizer):
             c1: Hệ số học hỏi cá nhân
             c2: Hệ số học hỏi xã hội
         """
+        # Lấy tham số từ config nếu không được truyền vào
+        pso_params = ALGORITHM_PARAMS.get('pso', {})
+        population_size = population_size if population_size is not None else pso_params.get('population_size', 30)
+        w = w if w is not None else pso_params.get('w', 0.7)
+        c1 = c1 if c1 is not None else pso_params.get('c1', 1.5)
+        c2 = c2 if c2 is not None else pso_params.get('c2', 1.5)
+        
         super().__init__(name, population_size)
         self.w = w
         self.c1 = c1
