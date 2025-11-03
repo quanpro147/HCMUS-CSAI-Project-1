@@ -229,4 +229,98 @@ class KnapsackProblem(DiscreteProblem):
             remove_idx = selected_indices[np.argmin(ratios)]
             solution[remove_idx] = 0
         return solution
+# ==============================================================================
+# ===   PHẦN MỚI THÊM VÀO ĐỂ DÙNG CHO A* (A-STAR)   ===
+# ==============================================================================
+
+class GridPathfindingProblem(DiscreteProblem):
+    """
+    Bài toán tìm đường đi trên lưới (Grid) cho A*.
+    
+    Quy ước:
+    - 0: Ô trống (có thể đi)
+    - 1: Tường (không thể đi)
+    """
+    
+    
+    def __init__(self, grid: np.ndarray, start: Tuple[int, int], goal: Tuple[int, int], 
+                 name: str = "Grid Pathfinding"):
+        """
+        Args:
+            grid: Ma trận 2D numpy (0 là đường, 1 là tường).
+            start: Tọa độ (y, x) của điểm bắt đầu.
+            goal: Tọa độ (y, x) của điểm kết thúc.
+        """
+        super().__init__(name)
+        self.grid = grid
+        self.start_pos = start
+        self.goal_pos = goal
+        self.height, self.width = grid.shape
+        
+        if not (0 <= start[0] < self.height and 0 <= start[1] < self.width):
+            raise ValueError("Điểm bắt đầu nằm ngoài lưới.")
+        if not (0 <= goal[0] < self.height and 0 <= goal[1] < self.width):
+            raise ValueError("Điểm kết thúc nằm ngoài lưới.")
+        if grid[start] == 1:
+            raise ValueError("Điểm bắt đầu là tường.")
+        if grid[goal] == 1:
+            raise ValueError("Điểm kết thúc là tường.")
+
+    def get_start_state(self) -> Tuple[int, int]:
+        """(Hàm này A* cần) Trả về trạng thái bắt đầu."""
+        return self.start_pos
+
+    def is_goal_state(self, state: Tuple[int, int]) -> bool:
+        """(Hàm này A* cần) Kiểm tra state có phải là đích."""
+        return state == self.goal_pos
+
+    def get_neighbors(self, state: Tuple[int, int]) -> List[Tuple[Tuple[int, int], int]]:
+        """
+        (Hàm này A* cần) Lấy các hàng xóm hợp lệ của một state.
+        
+        Returns:
+            List[ (neighbor_state, cost) ]
+        """
+        y, x = state
+        neighbors = []
+        
+        # Duyệt 4 hướng (trên, dưới, trái, phải)
+        for dy, dx in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            ny, nx = y + dy, x + dx
+            
+            # 1. Kiểm tra có nằm trong biên (bounds)
+            if 0 <= ny < self.height and 0 <= nx < self.width:
+                # 2. Kiểm tra có phải là tường (obstacle)
+                if self.grid[ny, nx] == 0:
+                    cost = 1 # Giả sử chi phí di chuyển là 1
+                    neighbors.append( ((ny, nx), cost) )
+                    
+        return neighbors
+
+    def get_heuristic(self, state: Tuple[int, int]) -> float:
+        """
+        (Hàm này A* cần) Tính heuristic (h) (khoảng cách Manhattan).
+        """
+        return abs(state[0] - self.goal_pos[0]) + abs(state[1] - self.goal_pos[1])
+
+    # Các hàm này không dùng cho A* nhưng vẫn cần để nhất quán với base class
+    def evaluate(self, solution):
+        """A* không dùng hàm này trực tiếp."""
+        if not isinstance(solution, list):
+            return float('inf')
+        # Fitness là độ dài đường đi
+        return len(solution) - 1
+
+    def random_solution(self):
+        """Không áp dụng cho A*."""
+        return None
+
+    def is_valid(self, solution):
+        """Kiểm tra đường đi có hợp lệ (không đi vào tường)."""
+        if not isinstance(solution, list):
+            return False
+        for (y, x) in solution:
+            if not (0 <= y < self.height and 0 <= x < self.width) or self.grid[y, x] == 1:
+                return False
+        return True
     
