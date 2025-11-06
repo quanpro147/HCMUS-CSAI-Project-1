@@ -1,7 +1,7 @@
 # Kiên
+from algorithms.base_optimizer import SwarmOptimizer
 import numpy as np
-from ..base_optimizer import SwarmOptimizer
-from config import ALGORITHM_PARAMS
+from config import ALGORITHM_PARAMS  # Import config để lấy tham số
 
 class ArtificialBeeColony(SwarmOptimizer):
     """

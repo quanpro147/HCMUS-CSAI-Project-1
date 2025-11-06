@@ -1,9 +1,8 @@
 # Kiên
+from algorithms.base_optimizer import TraditionalOptimizer
 import numpy as np
 import heapq  # Dùng Hàng đợi ưu tiên (Priority Queue)
-from ..base_optimizer import TraditionalOptimizer
-from problems.discrete_prob import DiscreteProblem
-
+from problems.discrete_prob import DiscreteProblem # Import rõ ràng để type hint
 
 class AStarNode:
     """Lớp lưu trữ thông tin của một nút trên đồ thị/lưới."""
