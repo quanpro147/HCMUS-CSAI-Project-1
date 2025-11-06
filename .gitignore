@@ -60,3 +60,5 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
+results/
+

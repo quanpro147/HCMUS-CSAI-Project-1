@@ -1,8 +1,13 @@
+# Tên file: main.py
+
 import sys
 import os
 from datetime import datetime
 
-# ==== Import continuous problems ====
+# Import config
+from config import EXPERIMENT_CONFIG
+
+# Import problems
 from problems import (
     SphereFunction,
     RastriginFunction,
@@ -20,23 +25,14 @@ from problems import (
 from algorithms import (
     ParticleSwarmOptimization,
     ArtificialBeeColony,
-    AntColonyOptimization,
     FireflyAlgorithm,
     CuckooSearch,
     HillClimbing,
-    SimulatedAnnealing,
-    AStar,
-    BFS,
 )
 
-# ==== Import experiment classes ====
+# Import experiment runners
 from experiments.run_continuous_tests import ContinuousExperiment
-from experiments.run_discrete_tests import DiscreteExperiment
-
-
-# ================================================================
-#                    COMMON UTILITIES
-# ================================================================
+from experiments.run_discrete_tests import DiscreteExperiment # <-- THÊM DÒNG NÀY
 
 def print_banner():
     print("\n" + "=" * 80)
@@ -44,133 +40,67 @@ def print_banner():
     print("    Swarm Intelligence & Classical Search Methods")
     print("=" * 80)
 
-
-# ================================================================
-#                    CONTINUOUS EXPERIMENTS
-# ================================================================
-
-def setup_continuous_problems(dimensions=[10]):
-    """Thiết lập các bài toán liên tục."""
-    print("\n📈 Setting up continuous problems...")
-    problems = []
-    for dim in dimensions:
-        problems.extend([
+def run_all_experiments():
+    """
+    Hàm chính điều phối việc chạy tất cả thí nghiệm.
+    """
+    # 1. Lấy cấu hình chung
+    n_runs = EXPERIMENT_CONFIG.get('n_runs', 10)
+    max_iter = EXPERIMENT_CONFIG.get('max_iter', 100)
+    results_dir = EXPERIMENT_CONFIG.get('results_dir', 'results')
+    
+    # 2. Chạy Thí nghiệm Liên tục (Continuous)
+    print("\n" + "="*80)
+    print("    🔬 BẮT ĐẦU CHẠY CONTINUOUS EXPERIMENTS")
+    print("="*80)
+    
+    # Setup problems
+    cont_problems = []
+    cont_dims = EXPERIMENT_CONFIG.get('continuous_dims', [10])
+    for dim in cont_dims:
+        cont_problems.extend([
             SphereFunction(dim=dim),
             RastriginFunction(dim=dim),
-            # RosenbrockFunction(dim=dim),
-            # AckleyFunction(dim=dim),
+            # Thêm các hàm khác ở đây
         ])
-    print(f"→ Created {len(problems)} continuous problems")
-    for p in problems:
-        print(f"    - {p.prob_name}")
-    return problems
 
-
-def setup_continuous_algorithms():
-    """Thiết lập các thuật toán continuous."""
-    print("\n⚙️  Setting up continuous algorithms...")
-    algorithms = [
-        ParticleSwarmOptimization(),  # Sử dụng tham số từ config
-        ArtificialBeeColony(),
-        FireflyAlgorithm(),
-        CuckooSearch(),
-        HillClimbing(),
+    # Setup algorithms
+    cont_algorithms = [
+        ParticleSwarmOptimization(), # Đọc params từ config
+        ArtificialBeeColony(),       # Đọc params từ config
+        FireflyAlgorithm(),          # Đọc params từ config
+        CuckooSearch(),              # Đọc params từ config
+        HillClimbing(),              # Đọc params từ config
     ]
-    print(f"→ Created {len(algorithms)} continuous algorithms")
-    for algo in algorithms:
-        print(f"    - {algo.name}")
-    return algorithms
-
-
-def run_continuous_experiments(config):
-    problems = setup_continuous_problems(dimensions=config['dimensions'])
-    algorithms = setup_continuous_algorithms()
-
-    experiment = ContinuousExperiment(
-        algorithms=algorithms,
-        problems=problems,
-        n_runs=config['n_runs'],
-        max_iter=config['max_iter'],
-        results_dir="results/continuous"
+    
+    # Tạo và chạy
+    cont_experiment = ContinuousExperiment(
+        algorithms=cont_algorithms,
+        problems=cont_problems,
+        n_runs=n_runs,
+        max_iter=max_iter,
+        results_dir=results_dir
     )
-
-    experiment.run()
-    print("\n✅ Continuous experiments completed!\n")
-
-
-# ================================================================
-#                    DISCRETE EXPERIMENTS
-# ================================================================
-
-def setup_discrete_problems():
-    """Thiết lập các bài toán rời rạc."""
-    print("\n🧩 Setting up discrete problems...")
-    problems = [
-        TravelingSalesmanProblem(n_cities=10),
-        #KnapsackProblem(n_items=20, capacity=50),
-    ]
-    print(f"→ Created {len(problems)} discrete problems")
-    for p in problems:
-        print(f"    - {p.prob_name}")
-    return problems
-
-
-def setup_discrete_algorithms():
-    """Thiết lập các thuật toán discrete."""
-    print("\n⚙️  Setting up discrete algorithms...")
-    algorithms = [
-        AntColonyOptimization(),     # Swarm-based cho TSP
-        SimulatedAnnealing(),        # Probabilistic local search
-        BFS(),                       # Complete search
-        # AStar(),                   # Chỉ dùng cho pathfinding (GridPathfinding)
-    ]
-    print(f"→ Created {len(algorithms)} discrete algorithms")
-    for algo in algorithms:
-        print(f"    - {algo.name}")
-    return algorithms
-
-
-def run_discrete_experiments(config):
-    problems = setup_discrete_problems()
-    algorithms = setup_discrete_algorithms()
-
-    experiment = DiscreteExperiment(
-        algorithms=algorithms,
-        problems=problems,
-        n_runs=config['n_runs'],
-        max_iter=config['max_iter'],
-        results_dir="results/discrete"
+    cont_experiment.run()
+    
+    # 3. Chạy Thí nghiệm Rời rạc (Discrete)
+    # (File này tự đọc config và setup bên trong)
+    disc_experiment = DiscreteExperiment(
+        n_runs=n_runs,
+        results_dir=results_dir
     )
-
-    experiment.run()
-    print("\n✅ Discrete experiments completed!\n")
-
-
-# ================================================================
-#                    MAIN EXECUTION
-# ================================================================
+    disc_experiment.run()
 
 def main():
+    # 1. In banner
     print_banner()
-
-    # --- Configuration ---
-    CONFIG = {
-        'dimensions': [10],
-        'n_runs': 5,
-        'max_iter': 100,
-    }
-
-    print("\nConfiguration:")
-    for k, v in CONFIG.items():
-        print(f"  {k}: {v}")
-    print()
-
+    
     try:
-        # Chạy cả 2 loại experiment
-        #run_continuous_experiments(CONFIG)
-        run_discrete_experiments(CONFIG)
-
-        print("\n🎉 ALL EXPERIMENTS COMPLETED SUCCESSFULLY!")
+        # 2. Chạy tất cả
+        run_all_experiments()
+        print("\n" + "="*80)
+        print("✅ ALL EXPERIMENTS COMPLETED SUCCESSFULLY!")
+        print("="*80)
 
     except KeyboardInterrupt:
         print("\n⚠️  Experiment interrupted by user.")
@@ -180,7 +110,6 @@ def main():
         import traceback
         traceback.print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
