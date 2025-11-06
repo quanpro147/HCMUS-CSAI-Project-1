@@ -167,7 +167,7 @@ def main():
 
     try:
         # Chạy cả 2 loại experiment
-        #run_continuous_experiments(CONFIG)
+        run_continuous_experiments(CONFIG)
         run_discrete_experiments(CONFIG)
 
         print("\n🎉 ALL EXPERIMENTS COMPLETED SUCCESSFULLY!")
