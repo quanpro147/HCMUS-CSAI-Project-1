@@ -11,24 +11,55 @@ class TravelingSalesmanProblem(DiscreteProblem):
     """
     
     def __init__(self, name: str = "TSP", n_cities: int = 20, 
-                 distance_matrix: np.ndarray = None, seed: int = None):
+                 distance_matrix: np.ndarray = None, coords: np.ndarray = None, seed: int = None):
         """
         Args:
             name: Tên bài toán
             n_cities: Số lượng thành phố
-            distance_matrix: Ma trận khoảng cách giữa các thành phố
+            distance_matrix: Ma trận khoảng cách giữa các thành phố (tùy chọn)
+            coords: Tọa độ các thành phố shape (n_cities, 2) (tùy chọn)
             seed: Seed cho random
         """
         super().__init__(name)
         self.n_cities = n_cities
-        if distance_matrix is not None:
+        self.coords = None
+        
+        # Ưu tiên: coords > distance_matrix > generate random
+        if coords is not None:
+            # Tạo distance matrix từ coords
+            self.coords = np.array(coords)
+            if self.coords.shape[0] != n_cities:
+                raise ValueError(f"coords phải có {n_cities} thành phố, nhưng có {self.coords.shape[0]}")
+            self.distance_matrix = self._compute_distance_matrix_from_coords(self.coords)
+        elif distance_matrix is not None:
+            # Dùng distance matrix có sẵn
             if distance_matrix.shape != (n_cities, n_cities):
                 raise ValueError("Distance matrix phải có kích thước (n_cities, n_cities)")
             self.distance_matrix = distance_matrix
         else:
+            # Generate ngẫu nhiên
             self.distance_matrix = self._generate_distance_matrix(seed)
+        
         self.optimal_value = None
-        self.coords = None
+    
+    def _compute_distance_matrix_from_coords(self, coords: np.ndarray) -> np.ndarray:
+        """
+        Tính ma trận khoảng cách từ tọa độ các thành phố.
+        
+        Args:
+            coords: Ma trận tọa độ shape (n_cities, 2)
+            
+        Returns:
+            np.ndarray: Ma trận khoảng cách Euclidean
+        """
+        n = len(coords)
+        distances = np.zeros((n, n))
+        for i in range(n):
+            for j in range(i + 1, n):
+                dist = np.linalg.norm(coords[i] - coords[j])
+                distances[i, j] = dist
+                distances[j, i] = dist
+        return distances
 
     def _generate_distance_matrix(self, seed: int = None) -> np.ndarray:
         """
@@ -159,80 +190,6 @@ class TravelingSalesmanProblem(DiscreteProblem):
         return neighbors
     
 
-class KnapsackProblem(DiscreteProblem):
-
-    def __init__(self, n_items=20, capacity=None, weights=None, values=None, seed=None):
-        super().__init__(prob_name="Knapsack Problem")
-        self.n_items = n_items
-        if seed is not None:
-            np.random.seed(seed)
-        if weights is not None:
-            self.weights = weights
-        else:
-            self.weights = np.random.randint(1, 50, n_items)
-        if values is not None:
-            self.values = values
-        else:
-            self.values = np.random.randint(1, 100, n_items)
-        if capacity is not None:
-            self.capacity = capacity
-        else:
-            self.capacity = int(0.5 * np.sum(self.weights))
-        self.optimal_value = None
-
-    def evaluate(self, solution: np.ndarray) -> float:
-        """
-            solution: là vector nhị phân với 0 là ko chọn, 1 là chọn
-        """
-        solution = np.array(solution, dtype=int)
-        total_weight = np.sum(solution * self.weights)
-        total_value = np.sum(solution * self.values)
-        if total_weight > self.capacity:
-            penalty = 1000 * (total_weight - self.capacity)
-            return -total_value + penalty
-        return -total_value
-    
-    def random_solution(self) -> np.ndarray:
-        solution = np.random.randint(0, 2, self.n_items)
-        while np.sum(solution * self.weights) > self.capacity:
-            selected_indices = np.where(solution == 1)[0]
-            if len(selected_indices) == 0:
-                break
-            remove_idx = np.random.choice(selected_indices)
-            solution[remove_idx] = 0
-        return solution
-    
-    def is_valid(self, solution):
-        # Kiểm tra là binary vector
-        if not all(x in [0, 1] for x in solution):
-            return False
-        
-        # Kiểm tra không vượt capacity
-        total_weight = np.sum(solution * self.weights)
-        return total_weight <= self.capacity
-    
-    def flip_bit(self, solution: np.ndarray, idx: int) -> np.ndarray:
-        new_solution = solution.copy()
-        new_solution[idx] = 1 - new_solution[idx]
-        return new_solution
-    
-    def repair_solution(self, solution: np.ndarray) -> np.ndarray:
-        """
-        Hàm sửa nghiệm bằng cách loại bỏ các vật ít giá trị nhất/trọng lượng cho đến khi hợp lệ.
-        """
-        solution = solution.copy()
-        while np.sum(solution * self.weights) > self.capacity:
-            selected_indices = np.where(solution == 1)[0]
-            if len(selected_indices) == 0:
-                break
-            ratios = self.values[selected_indices] / self.weights[selected_indices]
-            remove_idx = selected_indices[np.argmin(ratios)]
-            solution[remove_idx] = 0
-        return solution
-# ==============================================================================
-# ===   PHẦN MỚI THÊM VÀO ĐỂ DÙNG CHO A* (A-STAR)   ===
-# ==============================================================================
-
 class GridPathfindingProblem(DiscreteProblem):
     """
     Bài toán tìm đường đi trên lưới (Grid) cho A*.
@@ -242,29 +199,71 @@ class GridPathfindingProblem(DiscreteProblem):
     - 1: Tường (không thể đi)
     """
     
-    
-    def __init__(self, grid: np.ndarray, start: Tuple[int, int], goal: Tuple[int, int], 
+    def __init__(self, grid: np.ndarray = None, start: Tuple[int, int] = None, 
+                 goal: Tuple[int, int] = None, height: int = 10, width: int = 10,
+                 obstacle_ratio: float = 0.2, seed: int = None,
                  name: str = "Grid Pathfinding"):
         """
         Args:
-            grid: Ma trận 2D numpy (0 là đường, 1 là tường).
-            start: Tọa độ (y, x) của điểm bắt đầu.
-            goal: Tọa độ (y, x) của điểm kết thúc.
+            grid: Ma trận 2D numpy (0 là đường, 1 là tường). Nếu None, tự generate.
+            start: Tọa độ (y, x) của điểm bắt đầu. Nếu None, dùng (0, 0).
+            goal: Tọa độ (y, x) của điểm kết thúc. Nếu None, dùng (height-1, width-1).
+            height: Chiều cao lưới (chỉ dùng khi grid=None).
+            width: Chiều rộng lưới (chỉ dùng khi grid=None).
+            obstacle_ratio: Tỷ lệ chướng ngại vật (0.0-1.0, chỉ dùng khi grid=None).
+            seed: Random seed.
+            name: Tên bài toán.
         """
         super().__init__(name)
-        self.grid = grid
-        self.start_pos = start
-        self.goal_pos = goal
-        self.height, self.width = grid.shape
         
-        if not (0 <= start[0] < self.height and 0 <= start[1] < self.width):
-            raise ValueError("Điểm bắt đầu nằm ngoài lưới.")
-        if not (0 <= goal[0] < self.height and 0 <= goal[1] < self.width):
-            raise ValueError("Điểm kết thúc nằm ngoài lưới.")
-        if grid[start] == 1:
-            raise ValueError("Điểm bắt đầu là tường.")
-        if grid[goal] == 1:
-            raise ValueError("Điểm kết thúc là tường.")
+        # Tạo hoặc load grid
+        if grid is not None:
+            self.grid = np.array(grid)
+            self.height, self.width = self.grid.shape
+        else:
+            # Generate random grid
+            self.height = height
+            self.width = width
+            self.grid = self._generate_random_grid(obstacle_ratio, seed)
+        
+        # Set start và goal
+        self.start_pos = start if start is not None else (0, 0)
+        self.goal_pos = goal if goal is not None else (self.height - 1, self.width - 1)
+        
+        # Validate
+        if not (0 <= self.start_pos[0] < self.height and 0 <= self.start_pos[1] < self.width):
+            raise ValueError(f"Điểm bắt đầu {self.start_pos} nằm ngoài lưới {self.height}x{self.width}.")
+        if not (0 <= self.goal_pos[0] < self.height and 0 <= self.goal_pos[1] < self.width):
+            raise ValueError(f"Điểm kết thúc {self.goal_pos} nằm ngoài lưới {self.height}x{self.width}.")
+        if self.grid[self.start_pos] == 1:
+            # Nếu start là tường, xóa tường đó
+            self.grid[self.start_pos] = 0
+        if self.grid[self.goal_pos] == 1:
+            # Nếu goal là tường, xóa tường đó
+            self.grid[self.goal_pos] = 0
+    
+    def _generate_random_grid(self, obstacle_ratio: float = 0.2, seed: int = None) -> np.ndarray:
+        """
+        Tạo lưới ngẫu nhiên với chướng ngại vật.
+        
+        Args:
+            obstacle_ratio: Tỷ lệ ô là tường (0.0-1.0).
+            seed: Random seed.
+            
+        Returns:
+            np.ndarray: Grid với 0 (đường) và 1 (tường).
+        """
+        if seed is not None:
+            np.random.seed(seed)
+        
+        # Tạo grid ngẫu nhiên
+        grid = (np.random.rand(self.height, self.width) < obstacle_ratio).astype(int)
+        
+        # Đảm bảo start và goal không bị tường
+        grid[0, 0] = 0  # start
+        grid[self.height - 1, self.width - 1] = 0  # goal
+        
+        return grid
 
     def get_start_state(self) -> Tuple[int, int]:
         """(Hàm này A* cần) Trả về trạng thái bắt đầu."""
@@ -303,12 +302,10 @@ class GridPathfindingProblem(DiscreteProblem):
         """
         return abs(state[0] - self.goal_pos[0]) + abs(state[1] - self.goal_pos[1])
 
-    # Các hàm này không dùng cho A* nhưng vẫn cần để nhất quán với base class
     def evaluate(self, solution):
         """A* không dùng hàm này trực tiếp."""
         if not isinstance(solution, list):
             return float('inf')
-        # Fitness là độ dài đường đi
         return len(solution) - 1
 
     def random_solution(self):

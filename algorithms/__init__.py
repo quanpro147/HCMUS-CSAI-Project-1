@@ -3,6 +3,7 @@ from .base_optimizer import BaseOptimizer, SwarmOptimizer, TraditionalOptimizer
 from .swarm_algs import (
     ArtificialBeeColony,
     AntColonyOptimization,
+    ACO_Pathfinder,
     CuckooSearch,
     FireflyAlgorithm,
     ParticleSwarmOptimization
@@ -22,6 +23,7 @@ __all__ = [
     # Swarm algorithms
     'ArtificialBeeColony',
     'AntColonyOptimization',
+    'ACO_Pathfinder',
     'CuckooSearch',
     'FireflyAlgorithm',
     'ParticleSwarmOptimization',

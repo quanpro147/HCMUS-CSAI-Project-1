@@ -7,7 +7,7 @@ from .continuous_prob import (
 )
 from .discrete_prob import (
     TravelingSalesmanProblem,
-    KnapsackProblem
+    GridPathfindingProblem
 )
 
 __all__ = [
@@ -21,5 +21,5 @@ __all__ = [
     'AckleyFunction',
     # Discrete problems
     'TravelingSalesmanProblem',
-    'KnapsackProblem'
+    'GridPathfindingProblem'
 ]

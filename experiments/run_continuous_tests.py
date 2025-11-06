@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import List, Dict, Any
 import os
 
-# Import problems
 from problems import (
     SphereFunction, 
     RastriginFunction, 
@@ -13,11 +12,11 @@ from problems import (
     AckleyFunction
 )
 
-# Import algorithms
 from algorithms import FireflyAlgorithm
 from algorithms import ParticleSwarmOptimization
 from algorithms import ArtificialBeeColony
 from algorithms import HillClimbing
+from utils.metrics import compute_basic_stats, compute_convergence_speed, compute_time_complexity, compute_robustness_metrics
 
 
 class ContinuousExperiment:
@@ -58,19 +57,11 @@ class ContinuousExperiment:
         Returns:
             Dict chứa kết quả
         """
-        print(f"    Run {run_id + 1}/{self.n_runs}...", end='')
-        
-        # Reset thuật toán
         algorithm.reset()
-        
-        # Chạy
         result = algorithm.run(problem, max_iter=self.max_iter)
-        
-        print(f" fitness={result['fitness']:.6f}, time={result['execution_time']:.4f}s")
-        
         return result
     
-    def run_algorithm_on_problem(self, algorithm, problem) -> Dict[str, Any]:
+    def run_multiple_experiments(self, algorithm, problem) -> Dict[str, Any]:
         """
         Chạy 1 thuật toán nhiều lần trên 1 bài toán.
         
@@ -88,134 +79,76 @@ class ContinuousExperiment:
         # Tính statistics
         fitness_values = [r['fitness'] for r in all_results]
         time_values = [r['execution_time'] for r in all_results]
-        iterations_values = [r['iterations'] for r in all_results]
-        evaluations_values = [r['function_evaluations'] for r in all_results]
         
         # Get convergence curve and convert to list if needed
         best_convergence = all_results[np.argmin(fitness_values)]['convergence_curve']
         if isinstance(best_convergence, np.ndarray):
             best_convergence = best_convergence.tolist()
         
+        # Calculate metrics
+        fitness_stats = compute_basic_stats(fitness_values)
+        time_stats = compute_time_complexity(time_values)
+        robustness = compute_robustness_metrics(fitness_values)
+        conv_speed = compute_convergence_speed(best_convergence)
+
         stats = {
             'algorithm': algorithm.name,
             'problem': problem.prob_name,
             'n_runs': self.n_runs,
             'max_iter': self.max_iter,
-            
-            # Fitness statistics
-            'fitness': {
-                'mean': float(np.mean(fitness_values)),
-                'std': float(np.std(fitness_values)),
-                'min': float(np.min(fitness_values)),
-                'max': float(np.max(fitness_values)),
-                'median': float(np.median(fitness_values)),
-                'q25': float(np.percentile(fitness_values, 25)),
-                'q75': float(np.percentile(fitness_values, 75)),
-                'all_values': [float(v) for v in fitness_values]  # Convert to list of floats
-            },
-            
-            # Time statistics
-            'time': {
-                'mean': float(np.mean(time_values)),
-                'std': float(np.std(time_values)),
-                'min': float(np.min(time_values)),
-                'max': float(np.max(time_values)),
-                'all_values': [float(t) for t in time_values]  # Convert to list of floats
-            },
-            
-            # Other metrics
-            'iterations': {
-                'mean': float(np.mean(iterations_values))
-            },
-            'evaluations': {
-                'mean': float(np.mean(evaluations_values))
-            },
-            
-            # Convergence curves (lấy từ run tốt nhất)
-            'best_run_convergence': best_convergence,
-            
-            # Error from optimal
-            'error_from_optimal': {
-                'mean': float(np.mean(fitness_values) - problem.optimal_value),
-                'min': float(np.min(fitness_values) - problem.optimal_value)
-            }
+            'fitness': fitness_stats,
+            'time': time_stats,
+            'robustness': robustness,
+            'convergence_speed': conv_speed,
+            'best_run_convergence': best_convergence
         }
-        
         return stats
     
-    def run_all_experiments(self):
-        """
-        Chạy tất cả experiments: tất cả thuật toán trên tất cả bài toán.
-        """
+    def run(self):
+
         print("RUNNING CONTINUOUS OPTIMIZATION EXPERIMENTS")
-        print(f"Number of algorithms: {len(self.algorithms)}")
-        print(f"Number of problems: {len(self.problems)}")
-        print(f"Runs per experiment: {self.n_runs}")
-        print(f"Max iterations: {self.max_iter}")
+        print("="*80)
         
-        start_time = time.time()
-        
-        # Chạy từng problem
         for problem in self.problems:
-            print(f"\nProblem: {problem.prob_name} (dim={problem.dim})")
+            print("\n" + "-"*80)
+            print(f"Problem: {problem.prob_name} (dim={problem.dim})")
+            print("-"*80)
 
             problem_results = {}
-            
-            # Chạy từng thuật toán
+
             for algorithm in self.algorithms:
-                stats = self.run_algorithm_on_problem(algorithm, problem)
+                stats = self.run_multiple_experiments(algorithm, problem)
                 problem_results[algorithm.name] = stats
             
-            # Lưu kết quả
             self.results[problem.prob_name] = problem_results
-        
-        total_time = time.time() - start_time
 
-        print(f"\nALL EXPERIMENTS COMPLETED!")
-        print(f"Total time: {total_time:.2f} seconds ({total_time/60:.2f} minutes)")
-    
-    def run(self):
-        """
-        Method chính để chạy toàn bộ workflow: run -> summary -> save.
-        Chỉ cần gọi method này từ main.py
-        """
-        # 1. Chạy experiments
-        self.run_all_experiments()
-        
-        # 2. In summary
-        self.print_summary()
-        
-        # 3. Lưu kết quả
-        filepath = self.save_results()
-        
-        return filepath
+        self.summary()
+        self.save_results()
         
     def save_results(self, filename: str = None):
-        """
-        Lưu kết quả ra file JSON.
-        """
+
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"results_{timestamp}.json"
         
         filepath = os.path.join(self.results_dir, filename)
         
-        with open(filepath, 'w') as f:
-            json.dump(self.results, f, indent=4)
-        
-        print(f"\nResults saved to: {filepath}")
-        
-        return filepath
+        try:
+            with open(filepath, 'w') as f:
+                json.dump(self.results, f, indent=4)
+            print(f"\nResults saved to: {filepath}")
+        except Exception as e:
+            print(f"\nError saving results to {filepath}: {e}")
     
-    def print_summary(self):
-        """
-        In tóm tắt kết quả.
-        """
+    def summary(self):
+
         print("EXPERIMENT SUMMARY")
         
         for problem_name, problem_results in self.results.items():
-            print(f"\n {problem_name}:")
-            print(f"{'Algorithm':<25} {'Mean Fitness':<15} {'Std':<12} {'Best':<12} {'Time (s)':<10}")
+            print("="*80)
+            print(f"{problem_name}")
+            print("="*80)
+            print(f"{'Algorithm':<25} {'Mean Fitness':<15} {'Std Fitness':<12} {'Best Fitness':<12} {'Mean Time (s)':<10}")
             print("-"*80)
             
             # Sort by mean fitness
@@ -238,29 +171,21 @@ class ContinuousExperiment:
 
 
 def main():
-    """
-    Main function để chạy experiments.
-    """
-    
-    # 1. Định nghĩa các bài toán
-    print("Setting up problems...")
+
     problems = [
         SphereFunction(dim=10),
         RastriginFunction(dim=10),
-        # RosenbrockFunction(dim=10),
-        # AckleyFunction(dim=10),
+        RosenbrockFunction(dim=10),
+        AckleyFunction(dim=10),
     ]
     
-    # 2. Định nghĩa các thuật toán
-    print("Setting up algorithms...")
     algorithms = [
         FireflyAlgorithm(population_size=30, beta0=1.0, gamma=1.0, alpha=0.2),
         ParticleSwarmOptimization(population_size=30, w=0.7, c1=1.5, c2=1.5),
         ArtificialBeeColony(n_bees=40),
         HillClimbing(step_size=0.1),
     ]
-    
-    # 3. Tạo experiment
+
     experiment = ContinuousExperiment(
         algorithms=algorithms,
         problems=problems,
@@ -268,14 +193,7 @@ def main():
         max_iter=100
     )
     
-    # 4. Chạy experiments
-    experiment.run_all_experiments()
-    
-    # 5. In tóm tắt
-    experiment.print_summary()
-    
-    # 6. Lưu kết quả
-    experiment.save_results()
+    experiment.run()
 
 
 if __name__ == "__main__":
