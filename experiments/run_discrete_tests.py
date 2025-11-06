@@ -1,24 +1,19 @@
-
 import numpy as np
 import json
 import time
 import os
 from datetime import datetime
 from typing import List, Dict, Any
-
-# Import config
 from config import EXPERIMENT_CONFIG, ALGORITHM_PARAMS
 
-# Import problems
 from problems.discrete_prob import (
     TravelingSalesmanProblem,
     GridPathfindingProblem,
 )
 
-# Import algorithms
-from algorithms.swarm_algs.aco import AntColonyOptimization, ACO_Pathfinder
-from algorithms.traditional_algs.a_star import AStar
-# (Bạn có thể import thêm Hill Climbing, SA... ở đây nếu muốn so sánh trên TSP)
+from algorithms import AntColonyOptimization, ACO_Pathfinder, AStar
+from utils.metrics import compute_basic_stats, compute_time_complexity, compute_robustness_metrics, compute_convergence_speed
+from utils.data_loader import load_tsp_case, load_grid_case
 
 
 class DiscreteExperiment:
@@ -26,9 +21,11 @@ class DiscreteExperiment:
     Class để chạy và quản lý các thí nghiệm trên bài toán Rời Rạc.
     """
     
-    def __init__(self, n_runs: int, results_dir: str):
+    def __init__(self, n_runs: int, max_iter: int, results_dir: str, use_testcase: bool = True):
         self.n_runs = n_runs
+        self.max_iter = max_iter
         self.results_dir = results_dir
+        self.use_testcase = use_testcase
         self.results = []
         
         # Tạo thư mục results nếu chưa có
@@ -45,37 +42,65 @@ class DiscreteExperiment:
         """
         
         # === Thí nghiệm 1: So sánh trên TSP ===
-        # (Chỉ có ACO, bạn có thể thêm SA, GA... vào đây)
         tsp_sizes = EXPERIMENT_CONFIG.get('tsp_sizes', [10, 20])
         for n_cities in tsp_sizes:
-            self.experiment_setup.append({
-                'problem': TravelingSalesmanProblem(n_cities=n_cities),
-                'algorithms': [AntColonyOptimization],
-                'max_iter': EXPERIMENT_CONFIG.get('max_iter', 100)
-            })
+            if self.use_testcase:
+                # Load test case từ file
+                tsp_data = load_tsp_case('testcases/tsp_test.json')
+                
+                # Tạo TSP - class TravelingSalesmanProblem tự xử lý coords/distance_matrix
+                tsp_problem = TravelingSalesmanProblem(
+                    n_cities=tsp_data.get('n_cities', n_cities),
+                    coords=tsp_data.get('coords'),
+                    distance_matrix=tsp_data.get('distance_matrix')
+                )
+                
+                self.experiment_setup.append({
+                    'problem': tsp_problem,
+                    'algorithms': [AntColonyOptimization],
+                    'max_iter': self.max_iter
+                })
+            else:
+                # Tạo TSP ngẫu nhiên
+                self.experiment_setup.append({
+                    'problem': TravelingSalesmanProblem(n_cities=n_cities),
+                    'algorithms': [AntColonyOptimization],
+                    'max_iter': self.max_iter
+                })
 
         # === Thí nghiệm 2: So sánh trên Grid Pathfinding ===
-        # (ACO_Pathfinder vs A*)
         grid_sizes = EXPERIMENT_CONFIG.get('grid_sizes', [(10, 10)])
         for (h, w) in grid_sizes:
-            # Tạo 1 grid đơn giản với start (0,0) và goal (h-1, w-1)
-            grid = np.zeros((h, w))
-            start = (0, 0)
-            goal = (h-1, w-1)
-            # (Bạn có thể thêm tường (obstacles) vào grid ở đây nếu muốn)
+            if self.use_testcase:
+                # Load grid từ file
+                grid_data = load_grid_case('testcases/grid_test.json')
+                
+                # Tạo GridPathfindingProblem từ data
+                grid_problem = GridPathfindingProblem(
+                    grid=grid_data.get('grid'),
+                    start=tuple(grid_data.get('start', [0, 0])),
+                    goal=tuple(grid_data.get('goal', [h-1, w-1]))
+                )
+            else:
+                # Tạo grid ngẫu nhiên
+                grid_problem = GridPathfindingProblem(
+                    height=h,
+                    width=w,
+                    obstacle_ratio=0.2,
+                    seed=None
+                )
             
             self.experiment_setup.append({
-                'problem': GridPathfindingProblem(grid=grid, start=start, goal=goal),
+                'problem': grid_problem,
                 'algorithms': [ACO_Pathfinder, AStar],
-                'max_iter': EXPERIMENT_CONFIG.get('max_iter', 100) # Dùng max_iter chuẩn
+                'max_iter': EXPERIMENT_CONFIG.get('max_iter', 100)
             })
 
     def run(self):
         """
         Chạy tất cả các thí nghiệm đã thiết lập.
         """
-        print("\n" + "="*80)
-        print("    🔬 BẮT ĐẦU CHẠY DISCRETE EXPERIMENTS")
+        print("RUNNING DISCRETE OPTIMIZATION EXPERIMENTS")
         print("="*80)
         
         total_runs = 0
@@ -85,7 +110,7 @@ class DiscreteExperiment:
             algorithms = exp['algorithms']
             max_iter = exp['max_iter']
 
-            print(f"\n--- 📊 Problem: {problem.prob_name} (Size: {self._get_problem_size(problem)}) ---")
+            print(f"\nProblem: {problem.prob_name} (Size: {self._get_problem_size(problem)})")
             
             for AlgoClass in algorithms:
                 # Lấy params từ config
@@ -98,17 +123,9 @@ class DiscreteExperiment:
                     algo_params = ALGORITHM_PARAMS.get('a_star', {})
                 
                 algo_instance = AlgoClass(**algo_params)
-                print(f"  -> 🏃 Running Algorithm: {algo_instance.name}")
+                print(f"Running {algo_instance.name} on {problem.prob_name}...")
 
-                # Gán max_iter chuẩn
                 current_max_iter = max_iter 
-
-                # KIỂM TRA ĐẶC BIỆT: A* dùng max_iter làm "giới hạn duyệt nút"
-                if AlgoClass == AStar:
-                    current_max_iter = ALGORITHM_PARAMS.get('a_star', {}).get('max_iter', 50000)
-                    print(f"     (Using special max_iter for A*: {current_max_iter})")
-                
-                # Nơi lưu kết quả của n_runs (Task 1.3: Robustness)
                 run_results = {
                     'fitness_list': [],
                     'time_list': [],
@@ -133,10 +150,25 @@ class DiscreteExperiment:
                 
                 # Tính toán Robustness
                 self._save_summary(problem, algo_instance, run_results)
+        self.summary()
+        self._save_results()
 
-        print("\n✅ DISCRETE EXPERIMENTS COMPLETED!")
-        print(f"   Tổng số lần chạy: {total_runs}")
-        self._save_to_json()
+    def summary(self):
+        print("DISCRETE EXPERIMENT SUMMARY")
+        print(f"{'Problem':<20} {'Algorithm':<25} {'Mean Fitness':<15} {'Std Fitness':<12} {'Best Fitness':<12} {'Mean Time (s)':<14}")
+        print("-"*100)
+        for result in self.results:
+            print(f"{result['problem']:<20} {result['algorithm']:<25} "
+                  f"{result['fitness']['mean']:<15.6f} "
+                  f"{result['fitness']['std']:<12.6f} "
+                  f"{result['fitness']['min']:<12.6f} "
+                  f"{result['time']['mean']:<14.4f}")
+
+        # Highlight best per problem
+        problems = set(r['problem'] for r in self.results)
+        for p in problems:
+            best = min((r for r in self.results if r['problem']==p), key=lambda r: r['fitness']['mean'])
+            print(f"\n  🏆 Best for {p}: {best['algorithm']} (fitness={best['fitness']['mean']:.6f})")
 
     def _get_problem_size(self, problem):
         """Helper lấy kích thước bài toán để in ra."""
@@ -147,49 +179,55 @@ class DiscreteExperiment:
         return "N/A"
 
     def _save_summary(self, problem, algo, run_results):
-        """
-        Tính toán Mean, Std và lưu vào self.results
-        Đây là phần thực thi Task 1.
-        """
         fitness_arr = np.array(run_results['fitness_list'])
         time_arr = np.array(run_results['time_list'])
         evals_arr = np.array(run_results['evals_list'])
+        conv_curves = run_results['convergence_curves']
+
+        fitness_stats = compute_basic_stats(fitness_arr)
+        time_stats = compute_time_complexity(time_arr)
+        robustness = compute_robustness_metrics(fitness_arr)
+        mean_convergence = np.mean(conv_curves, axis=0).tolist()
+        mean_conv_speed = compute_convergence_speed(mean_convergence)
 
         summary = {
             'problem': problem.prob_name,
             'problem_size': self._get_problem_size(problem),
             'algorithm': algo.name,
             'n_runs': self.n_runs,
-
-            # Metric: Robustness (Mean và Std)
-            'fitness_mean': float(np.mean(fitness_arr)),
-            'fitness_std': float(np.std(fitness_arr)),
-            'fitness_best': float(np.min(fitness_arr)),
-            'fitness_worst': float(np.max(fitness_arr)),
-
-            # Metric: Computational Time (Mean và Std)
-            'time_mean': float(np.mean(time_arr)),
-            'time_std': float(np.std(time_arr)),
-
-            # Evals có thể là số nguyên
-            'evals_mean': float(np.mean(evals_arr)),
-            'evals_std': float(np.std(evals_arr)),
-
-            # Metric: Convergence (lấy đường cong hội tụ trung bình)
-            # .tolist() đã tự động chuyển đổi kiểu dữ liệu
-            'convergence_mean': np.mean(run_results['convergence_curves'], axis=0).tolist(),
+            'fitness': fitness_stats,
+            'time': time_stats,
+            'robustness': robustness,
+            'convergence_speed': mean_conv_speed,
+            'mean_convergence_curve': mean_convergence
         }
-
         self.results.append(summary)
 
-    def _save_to_json(self):
-        """Lưu file JSON kết quả."""
-        now = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = os.path.join(self.results_dir, f"discrete_results_{now}.json")
+    def _save_results(self, filename: str = None):
+
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"discrete/results_{timestamp}.json"
+        
+        filepath = os.path.join(self.results_dir, filename)
         
         try:
-            with open(filename, 'w') as f:
+            with open(filepath, 'w') as f:
                 json.dump(self.results, f, indent=4)
-            print(f"\n💾 Kết quả đã lưu vào: {filename}")
+            print(f"\nResults saved to: {filepath}")
         except Exception as e:
-            print(f"\n❌ Lỗi khi lưu file JSON: {e}")
+            print(f"\nError saving results to {filepath}: {e}")
+
+
+def main():
+    
+    experiment = DiscreteExperiment(
+        n_runs=10,
+        max_iter=100,
+        results_dir='results'
+    )
+    experiment.run()
+    experiment.summary()
+
+if __name__ == "__main__":
+    main()

@@ -43,7 +43,6 @@ class ParticleSwarmOptimization(SwarmOptimizer):
         self.gbest = None
         self.gbest_fitness = np.inf
 
-    # ---------------------------------------------------------
     def optimize(self, problem, max_iter: int = 100, **kwargs) -> Tuple[Any, float]:
         """
         Thực hiện tối ưu hóa bằng PSO.
@@ -115,7 +114,6 @@ class ParticleSwarmOptimization(SwarmOptimizer):
 
         return self.best_solution, self.best_fitness
 
-    # ---------------------------------------------------------
     def reset(self):
         """Reset trạng thái của PSO."""
         super().reset()

@@ -48,14 +48,12 @@ class BaseOptimizer(ABC):
         # Reset trước khi chạy
         self.reset()
         
-        # Đo thời gian
         start_time = time.time()
-        
         # Chạy thuật toán
         solution, fitness = self.optimize(problem, max_iter=max_iter, **kwargs)
-        
+        end_time = time.time()
+        self.execution_time = end_time - start_time
         # Lưu kết quả
-        self.execution_time = time.time() - start_time
         self.best_solution = solution
         self.best_fitness = fitness
         

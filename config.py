@@ -6,10 +6,10 @@ Configuration file cho experiments.
 
 EXPERIMENT_CONFIG = {
     # Số lần chạy mỗi thuật toán trên mỗi bài toán
-    'n_runs': 30,
+    'n_runs': 10,
 
     # Số iteration tối đa cho mỗi thuật toán
-    'max_iter': 300,
+    'max_iter': 100,
 
     # Các số chiều cần test
     'dimensions': [10, 30],
@@ -26,7 +26,7 @@ EXPERIMENT_CONFIG = {
 }
 
 # ============================================================
-# ⚙️ ALGORITHM PARAMETERS (tối ưu theo benchmark)
+# ⚙️ ALGORITHM PARAMETERS
 # ============================================================
 
 ALGORITHM_PARAMS = {
@@ -121,7 +121,7 @@ PROBLEMS_TO_TEST = {
 
     'discrete': [
         'tsp',
-        # 'knapsack',
+        'knapsack',
     ],
 }
 
@@ -139,5 +139,7 @@ ALGORITHMS_TO_TEST = {
     'traditional': [
         'hill_climbing',
         'bfs',
+        'a_star',
+        'simulated_annealing',
     ],
 }
