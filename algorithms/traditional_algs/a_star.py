@@ -1,8 +1,8 @@
 # Kiên
-from ..base_optimizer import TraditionalOptimizer
+from algorithms.base_optimizer import TraditionalOptimizer
 import numpy as np
 import heapq  # Dùng Hàng đợi ưu tiên (Priority Queue)
-from ...problems.discrete_prob import DiscreteProblem # Import rõ ràng để type hint
+from problems.discrete_prob import DiscreteProblem # Import rõ ràng để type hint
 
 # ==============================================================================
 # Lớp Helper cho A* (Phải nằm ngoài class AStar)
