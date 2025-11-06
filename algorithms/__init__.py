@@ -11,7 +11,8 @@ from .swarm_algs import (
 from .traditional_algs import (
     HillClimbing,
     AStar,
-    BFS
+    BFS,
+    SimulatedAnnealing
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     'HillClimbing',
     'AStar',
     'BFS',
+    'SimulatedAnnealing',
 ]

@@ -4,14 +4,6 @@ import numpy as np
 from config import ALGORITHM_PARAMS  # Import config để lấy tham số
 
 class ArtificialBeeColony(SwarmOptimizer):
-    """def __init__(self, population_size=None, limit=None):
-        super().__init__(name="Artificial Bee Colony")
-        self.population_size = population_size
-        self.limit = limit
-
-    def optimize(self, problem, max_iter=100, **kwargs):
-        # TODO: Implement ABC algorithm
-        pass"""
     """
     Triển khai thuật toán Tối ưu hóa Bầy ong Nhân tạo (Artificial Bee Colony).
     
@@ -38,7 +30,7 @@ class ArtificialBeeColony(SwarmOptimizer):
         self.trial_counters = None
         self.dim = None
 
-    def optimize(self, problem: 'ContinuousProblem', max_iter: int = 100, **kwargs) -> tuple:
+    def optimize(self, problem, max_iter: int = 100, **kwargs) -> tuple:
         """
         Hàm tối ưu hóa chính, được gọi bởi self.run().
         
@@ -95,7 +87,7 @@ class ArtificialBeeColony(SwarmOptimizer):
 
     # --- Các hàm private helper cho ABC ---
 
-    def _generate_candidate(self, i: int, problem: 'ContinuousProblem') -> np.ndarray:
+    def _generate_candidate(self, i: int, problem) -> np.ndarray:
         """Tạo giải pháp ứng viên v_i từ x_i."""
         # Chọn hàng xóm k ngẫu nhiên (k != i)
         k = np.random.randint(0, self.population_size)
@@ -151,7 +143,7 @@ class ArtificialBeeColony(SwarmOptimizer):
         """Chọn nguồn thức ăn bằng Roulette Wheel Selection."""
         return np.random.choice(np.arange(self.population_size), p=probs)
 
-    def _scout_phase(self, problem: 'ContinuousProblem'):
+    def _scout_phase(self, problem):
         """Giai đoạn ong trinh sát."""
         for i in range(self.population_size):
             if self.trial_counters[i] > self.limit:
