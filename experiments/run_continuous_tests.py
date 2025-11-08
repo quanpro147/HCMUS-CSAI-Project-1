@@ -128,8 +128,7 @@ class ContinuousExperiment:
     def save_results(self, filename: str = None):
 
         if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"results_{timestamp}.json"
+            filename = f"continuous_results.json"
         
         filepath = os.path.join(self.results_dir, filename)
         

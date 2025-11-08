@@ -41,14 +41,13 @@ class DiscreteExperiment:
         Đây là nơi bạn ghép (Thuật toán, Bài toán, Cỡ)
         """
         
-        # === Thí nghiệm 1: So sánh trên TSP ===
+        # Experiment 1: TSP
         tsp_sizes = EXPERIMENT_CONFIG.get('tsp_sizes', [10, 20])
         for n_cities in tsp_sizes:
             if self.use_testcase:
-                # Load test case từ file
+                # Tạo TSP từ file testcase
                 tsp_data = load_tsp_case('testcases/tsp_test.json')
                 
-                # Tạo TSP - class TravelingSalesmanProblem tự xử lý coords/distance_matrix
                 tsp_problem = TravelingSalesmanProblem(
                     n_cities=tsp_data.get('n_cities', n_cities),
                     coords=tsp_data.get('coords'),
@@ -68,14 +67,13 @@ class DiscreteExperiment:
                     'max_iter': self.max_iter
                 })
 
-        # === Thí nghiệm 2: So sánh trên Grid Pathfinding ===
+        # Experiment 2: GridPathFinding
         grid_sizes = EXPERIMENT_CONFIG.get('grid_sizes', [(10, 10)])
         for (h, w) in grid_sizes:
             if self.use_testcase:
-                # Load grid từ file
+                # Tạo GridPathfindingProblem từ testcase
                 grid_data = load_grid_case('testcases/grid_test.json')
                 
-                # Tạo GridPathfindingProblem từ data
                 grid_problem = GridPathfindingProblem(
                     grid=grid_data.get('grid'),
                     start=tuple(grid_data.get('start', [0, 0])),
@@ -206,8 +204,7 @@ class DiscreteExperiment:
     def _save_results(self, filename: str = None):
 
         if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"discrete/results_{timestamp}.json"
+            filename = f"discrete_results.json"
         
         filepath = os.path.join(self.results_dir, filename)
         
