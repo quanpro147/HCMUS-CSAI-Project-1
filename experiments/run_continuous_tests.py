@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from typing import List, Dict, Any
 import os
+from utils import compute_basic_stats, compute_convergence_speed, compute_time_complexity, compute_robustness_metrics
 
 from problems import (
     SphereFunction, 
@@ -12,11 +13,12 @@ from problems import (
     AckleyFunction
 )
 
-from algorithms import FireflyAlgorithm
-from algorithms import ParticleSwarmOptimization
-from algorithms import ArtificialBeeColony
-from algorithms import HillClimbing
-from utils.metrics import compute_basic_stats, compute_convergence_speed, compute_time_complexity, compute_robustness_metrics
+from algorithms import (
+    FireflyAlgorithm,
+    ParticleSwarmOptimization,
+    ArtificialBeeColony,
+    HillClimbing,
+)
 
 
 class ContinuousExperiment:
@@ -49,6 +51,7 @@ class ContinuousExperiment:
         
         # Lưu kết quả
         self.results = {}
+
         
     def run_single_experiment(self, algorithm, problem, run_id: int) -> Dict[str, Any]:
         """
@@ -72,9 +75,11 @@ class ContinuousExperiment:
         
         all_results = []
         
-        for run_id in range(self.n_runs):
-            result = self.run_single_experiment(algorithm, problem, run_id)
-            all_results.append(result)
+        for i in range(self.n_runs):
+            print(f"     Run {i+1}/{self.n_runs}...", end=" ")
+            result_dict = self.run_single_experiment(algorithm, problem, i)
+            print(f"Done! Fitness: {result_dict['fitness']:.2f} | Time: {result_dict['execution_time']:.4f}s")
+            all_results.append(result_dict)
         
         # Tính statistics
         fitness_values = [r['fitness'] for r in all_results]
@@ -92,8 +97,6 @@ class ContinuousExperiment:
         conv_speed = compute_convergence_speed(best_convergence)
 
         stats = {
-            'algorithm': algorithm.name,
-            'problem': problem.prob_name,
             'n_runs': self.n_runs,
             'max_iter': self.max_iter,
             'fitness': fitness_stats,
@@ -144,9 +147,7 @@ class ContinuousExperiment:
         print("EXPERIMENT SUMMARY")
         
         for problem_name, problem_results in self.results.items():
-            print("="*80)
-            print(f"{problem_name}")
-            print("="*80)
+            print(f"\n\nProblem: {problem_name}")
             print(f"{'Algorithm':<25} {'Mean Fitness':<15} {'Std Fitness':<12} {'Best Fitness':<12} {'Mean Time (s)':<10}")
             print("-"*80)
             
@@ -166,7 +167,7 @@ class ContinuousExperiment:
             # Best algorithm
             best_algo = sorted_results[0][0]
             best_fitness = sorted_results[0][1]['fitness']['mean']
-            print(f"\n  🏆 Best: {best_algo} (fitness={best_fitness:.6f})")
+            print(f"\n  Best: {best_algo} (fitness={best_fitness:.6f})")
 
 
 def main():
@@ -179,10 +180,10 @@ def main():
     ]
     
     algorithms = [
-        FireflyAlgorithm(population_size=30, beta0=1.0, gamma=1.0, alpha=0.2),
-        ParticleSwarmOptimization(population_size=30, w=0.7, c1=1.5, c2=1.5),
-        ArtificialBeeColony(n_bees=40),
-        HillClimbing(step_size=0.1),
+        FireflyAlgorithm(),
+        ParticleSwarmOptimization(),
+        ArtificialBeeColony(),
+        HillClimbing(),
     ]
 
     experiment = ContinuousExperiment(

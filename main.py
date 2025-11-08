@@ -1,11 +1,13 @@
 import sys
 from config import EXPERIMENT_CONFIG
+from utils import load_json
 
 from problems import (
     SphereFunction,
     RastriginFunction,
-    #RosenbrockFunction,
     AckleyFunction,
+    TravelingSalesmanProblem,
+    GridPathfindingProblem,
 )
 
 from algorithms import (
@@ -14,6 +16,10 @@ from algorithms import (
     FireflyAlgorithm,
     CuckooSearch,
     HillClimbing,
+    AntColonyOptimization,
+    ACO_Pathfinder,
+    AStar,
+    SimulatedAnnealing
 )
 
 from experiments.run_continuous_tests import ContinuousExperiment
@@ -31,7 +37,6 @@ def run_all_experiments():
     cont_problems = [
         SphereFunction(dim=10),
         RastriginFunction(dim=10),
-        #RosenbrockFunction(dim=10),
         AckleyFunction(dim=10),
     ]
 
@@ -54,10 +59,36 @@ def run_all_experiments():
     cont_experiment.run()
     
     # Run discrete experiments
+    tsp_data = load_json('testcases/tsp_test.json')
+    tsp_problem = TravelingSalesmanProblem(
+        n_cities=tsp_data.get('n_cities'),
+        coords=tsp_data.get('coords'),
+        distance_matrix=tsp_data.get('distance_matrix')
+    )
+    
+    grid_data = load_json('testcases/grid_test.json')
+    grid_problem = GridPathfindingProblem(
+        grid=grid_data.get('grid'),
+        start=tuple(grid_data.get('start')),
+        goal=tuple(grid_data.get('goal'))
+    )
+
+    problems = [
+        tsp_problem,
+        grid_problem
+    ]
+    
+    algorithms = [
+        AntColonyOptimization(),
+        SimulatedAnnealing(),
+        ACO_Pathfinder(),
+        AStar(),
+    ]
     disc_experiment = DiscreteExperiment(
-        n_runs=n_runs,
-        max_iter=max_iter,
-        results_dir=results_dir
+        algorithms=algorithms,
+        problems=problems,
+        n_runs=10, 
+        max_iter=100
     )
     disc_experiment.run()
 
@@ -69,7 +100,6 @@ def main():
     print("=" * 80)
 
     try:
-        # 2. Run all experiments
         run_all_experiments()
         print("\n" + "="*80)
         print("✅ ALL EXPERIMENTS COMPLETED SUCCESSFULLY!")

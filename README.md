@@ -2,12 +2,13 @@
 
 So sánh hiệu quả giữa các thuật toán Swarm Intelligence và Traditional Search.
 
-## 🚀 Quick Start
+## 🚀 How to run
 
 ### 1. Cài đặt dependencies
 
 ```bash
 pip install -r requirements.txt
+
 ```
 
 ### 2. Chạy experiments
@@ -20,7 +21,6 @@ python main.py
 
 Chương trình sẽ:
 - ✅ Test tất cả thuật toán trên tất cả bài toán
-- ✅ Chạy 10 lần mỗi experiment (có thể thay đổi)
 - ✅ Lưu kết quả vào `results/`
 - ✅ In summary table
 
@@ -28,7 +28,8 @@ Chương trình sẽ:
 
 Kết quả được lưu trong folder `results/` dạng JSON file:
 ```
-results/results_20251031_143022.json
+results/continuous_results.json
+results/discrete_results.json
 ```
 
 ## 📊 Cấu hình
@@ -54,18 +55,19 @@ EXPERIMENT_CONFIG = {
 
 ### Traditional Search:
 - Hill Climbing
-- BFS (optional)
-- A* (optional)
+- Simulated annealing
+- BFS
+- A*
 
 ## 📈 Bài toán Test
 
 ### Continuous Problems:
-- Sphere Function (dễ, unimodal)
-- Rastrigin Function (khó, multimodal)
-- Rosenbrock Function (valley)
-- Ackley Function (multimodal)
-- Griewank Function
-- Schwefel Function
+- Sphere Function
+- Rastrigin Function 
+- Ackley Function 
+### Discrete Problem:
+- TSP
+- GridPathFinding
 
 ## 📁 Cấu trúc Project
 
@@ -98,7 +100,7 @@ source code/
 │   └── visualization_tools.py
 │
 └── results/                 # Kết quả (tự động tạo)
-    └── results_xxx.json
+    └── .json
 ```
 
 ## 🔬 Chạy từng phần (Advanced)

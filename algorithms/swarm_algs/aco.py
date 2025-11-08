@@ -1,17 +1,10 @@
-
 import numpy as np
 from typing import Any, Tuple, List
 
-# Import lớp base và config
-from algorithms.base_optimizer import SwarmOptimizer
+from algorithms import SwarmOptimizer
 from config import ALGORITHM_PARAMS
+from problems import TravelingSalesmanProblem, GridPathfindingProblem
 
-# Import các Problem mà 2 lớp ACO này sẽ giải
-from problems.discrete_prob import TravelingSalesmanProblem, GridPathfindingProblem
-
-# ==============================================================================
-# ===   LỚP 1: ACO CHO BÀI TOÁN TSP (Đã sửa lỗi)   ===
-# ==============================================================================
 
 class AntColonyOptimization(SwarmOptimizer):
     """
@@ -27,7 +20,7 @@ class AntColonyOptimization(SwarmOptimizer):
         pop_size = aco_params.get('n_ants', 20)
         self.alpha = aco_params.get('alpha', 1.0)
         self.beta = aco_params.get('beta', 2.0)
-        self.evaporation = aco_params.get('rho', 0.5) # 'rho' trong config
+        self.evaporation = aco_params.get('rho', 0.5)
         self.Q = aco_params.get('pheromone_scale', 100)
 
         super().__init__(name="ACO (for TSP)", population_size=pop_size)
