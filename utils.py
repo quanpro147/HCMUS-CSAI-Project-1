@@ -1,4 +1,11 @@
+import json
 import numpy as np
+
+
+def load_json(json_path):
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+    return data
 
 # --- Common Metrics ---
 def compute_basic_stats(values):
