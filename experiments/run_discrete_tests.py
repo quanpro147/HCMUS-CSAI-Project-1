@@ -15,7 +15,8 @@ from algorithms import (
     AntColonyOptimization, 
     ACO_Pathfinder, 
     AStar, 
-    SimulatedAnnealing
+    SimulatedAnnealing,
+    BFS
 )
 
 class DiscreteExperiment:
@@ -116,7 +117,7 @@ class DiscreteExperiment:
         """
         # ACO và SimulatedAnnealing chỉ cho TSP
         if isinstance(problem, TravelingSalesmanProblem):
-            return isinstance(algorithm, (AntColonyOptimization, SimulatedAnnealing))
+            return isinstance(algorithm, (AntColonyOptimization, SimulatedAnnealing, BFS))
         
         # ACO_Pathfinder và A* chỉ cho GridPathfinding
         elif isinstance(problem, GridPathfindingProblem):
@@ -237,6 +238,7 @@ def main():
         SimulatedAnnealing(),
         ACO_Pathfinder(),
         AStar(),
+        BFS()
     ]
 
     experiment = DiscreteExperiment(

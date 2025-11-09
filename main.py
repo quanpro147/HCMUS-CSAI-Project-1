@@ -19,7 +19,8 @@ from algorithms import (
     AntColonyOptimization,
     ACO_Pathfinder,
     AStar,
-    SimulatedAnnealing
+    SimulatedAnnealing,
+    BFS
 )
 
 from experiments.run_continuous_tests import ContinuousExperiment
@@ -83,6 +84,7 @@ def run_all_experiments():
         SimulatedAnnealing(),
         ACO_Pathfinder(),
         AStar(),
+        BFS()
     ]
     disc_experiment = DiscreteExperiment(
         algorithms=algorithms,
