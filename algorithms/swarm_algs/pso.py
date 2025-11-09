@@ -23,7 +23,6 @@ class ParticleSwarmOptimization(SwarmOptimizer):
             c1: Hệ số học hỏi cá nhân
             c2: Hệ số học hỏi xã hội
         """
-        # Lấy tham số từ config nếu không được truyền vào
         pso_params = ALGORITHM_PARAMS.get('pso', {})
         population_size = population_size if population_size is not None else pso_params.get('population_size', 30)
         w = w if w is not None else pso_params.get('w', 0.7)

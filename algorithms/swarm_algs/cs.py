@@ -7,7 +7,7 @@ from config import ALGORITHM_PARAMS
 class CuckooSearch(SwarmOptimizer):
 
     def __init__(self, population_size=None, pa=None, alpha=None):
-        # Lấy tham số từ config nếu không được truyền vào
+
         cs_params = ALGORITHM_PARAMS.get('cs', {})
         population_size = population_size if population_size is not None else cs_params.get('population_size', 25)
         pa = pa if pa is not None else cs_params.get('pa', 0.25)

@@ -42,7 +42,7 @@ ALGORITHM_PARAMS = {
     # -------------------------
     'abc': {
         'population_size': 40,
-        'limit': 40,      # giảm nhẹ để tránh stagnation
+        'limit': 40,     
     },
     
     'aco': { # Dùng cho ACO-TSP

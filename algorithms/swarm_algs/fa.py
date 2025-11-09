@@ -5,7 +5,7 @@ from config import ALGORITHM_PARAMS
 class FireflyAlgorithm(SwarmOptimizer):
 
     def __init__(self, population_size=None, beta0=None, gamma=None, alpha=None):
-        # Lấy tham số từ config nếu không được truyền vào
+
         fa_params = ALGORITHM_PARAMS.get('fa', {})
         population_size = population_size if population_size is not None else fa_params.get('population_size', 30)
         beta0 = beta0 if beta0 is not None else fa_params.get('beta0', 1.0)
@@ -16,7 +16,6 @@ class FireflyAlgorithm(SwarmOptimizer):
         self.beta0 = beta0
         self.gamma = gamma
         self.alpha = alpha
-        self.history = []
 
     def optimize(self, problem, max_iter=100, **kwargs):
         self._initialize_population(problem, self.population_size)
@@ -59,11 +58,7 @@ class FireflyAlgorithm(SwarmOptimizer):
                 self.best_fitness = self.fitness_values[best_idx]
                 self.best_solution = self.population[best_idx].copy()
 
-            self.history.append(self.population.copy())
             self._update_convergence()
             self.iterations_done += 1
 
         return self.best_solution, self.best_fitness
-
-    def get_history(self):
-        return self.history

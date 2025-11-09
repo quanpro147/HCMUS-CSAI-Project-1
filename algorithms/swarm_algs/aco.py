@@ -15,7 +15,7 @@ class AntColonyOptimization(SwarmOptimizer):
         """
         Khởi tạo bằng cách đọc thông số từ config.py
         """
-        # Lấy tham số riêng của ACO từ config
+
         aco_params = ALGORITHM_PARAMS.get('aco', {})
         pop_size = aco_params.get('n_ants', 20)
         self.alpha = aco_params.get('alpha', 1.0)
@@ -108,9 +108,7 @@ class AntColonyOptimization(SwarmOptimizer):
         super().reset()
         self.pheromone = None
 
-# ==============================================================================
-# ===   LỚP 2: ACO CHO BÀI TOÁN TÌM ĐƯỜNG (Để so sánh với A*)   ===
-# ==============================================================================
+# ACO CHO BÀI TOÁN TÌM ĐƯỜNG
 
 class ACO_Pathfinder(SwarmOptimizer):
     """
