@@ -15,7 +15,7 @@ class ArtificialBeeColony(SwarmOptimizer):
         Khởi tạo thuật toán ABC.
         Đọc các tham số (population_size, limit) từ file config.
         """
-        # Lấy tham số riêng của ABC từ file config
+
         abc_params = ALGORITHM_PARAMS.get('abc', {})
         pop_size = abc_params.get('population_size', 30)  # SN = Số nguồn thức ăn
         self.limit = abc_params.get('limit', 10)         # Ngưỡng trial cho ong trinh sát

@@ -3,53 +3,37 @@ from .base_problem import ContinuousProblem
 
 
 class SphereFunction(ContinuousProblem):
-
-    def __init__(self, dim=10):
-        super().__init__(prob_name="Sphere Function", dim=dim, bounds=(-5.12, 5.12))
+    def __init__(self, dim=10, bounds=(-5.12, 5.12), shift=False, rotate=False, seed=None):
+        super().__init__("Sphere Function", dim, bounds, shift, rotate, seed)
         self.optimal_value = 0.0
-        self.optimal_solution = np.zeros(dim)
 
     def evaluate(self, x: np.ndarray) -> float:
-        return np.sum(x ** 2)
+        z = self.transform(x)
+        return np.sum(z ** 2)
 
 
 class RastriginFunction(ContinuousProblem):
-
-    def __init__(self, dim=10):
-        super().__init__(prob_name="Rastrigin Function", dim=dim, bounds=(-5.12, 5.12))
+    def __init__(self, dim=10, bounds=(-5.12, 5.12), shift=False, rotate=False, seed=None):
+        super().__init__("Rastrigin Function", dim, bounds, shift, rotate, seed)
         self.optimal_value = 0.0
-        self.optimal_solution = np.zeros(dim)
 
     def evaluate(self, x: np.ndarray) -> float:
+        z = self.transform(x)
         A = 10
-        return A * self.dim + np.sum(x ** 2 - A * np.cos(2 * np.pi * x))
+        return A * self.dim + np.sum(z ** 2 - A * np.cos(2 * np.pi * z))
 
-class RosenbrockFunction(ContinuousProblem):
-    
-    def __init__(self, dim=10):
-        super().__init__(prob_name="Rosenbrock Function", dim=dim, bounds=(-5, 10))
-        self.optimal_value = 0.0
-        self.optimal_solution = np.ones(dim)
-    
-    def evaluate(self, x: np.ndarray) -> float:
-        return np.sum(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2)
 
 class AckleyFunction(ContinuousProblem):
-    
-    def __init__(self, dim=10):
-        super().__init__(prob_name="Ackley Function", dim=dim, bounds=(-32.768, 32.768))
+    def __init__(self, dim=10, bounds=(-32.768, 32.768), shift=False, rotate=False, seed=None):
+        super().__init__("Ackley Function", dim, bounds, shift, rotate, seed)
         self.optimal_value = 0.0
-        self.optimal_solution = np.zeros(dim)
-    
+
     def evaluate(self, x: np.ndarray) -> float:
-        a = 20
-        b = 0.2
-        c = 2 * np.pi
-        
-        sum1 = np.sum(x ** 2)
-        sum2 = np.sum(np.cos(c * x))
-        
-        term1 = -a * np.exp(-b * np.sqrt(sum1 / self.dim))
-        term2 = -np.exp(sum2 / self.dim)
-        
+        z = self.transform(x)
+        a, b, c = 20, 0.2, 2 * np.pi
+        n = self.dim
+        sum1 = np.sum(z ** 2)
+        sum2 = np.sum(np.cos(c * z))
+        term1 = -a * np.exp(-b * np.sqrt(sum1 / n))
+        term2 = -np.exp(sum2 / n)
         return term1 + term2 + a + np.e
