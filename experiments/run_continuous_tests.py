@@ -1,17 +1,9 @@
 import numpy as np
 import json
-import time
-from datetime import datetime
 from typing import List, Dict, Any
 import os
+from testcases_loader import load_testcases
 from utils import compute_basic_stats, compute_convergence_speed, compute_time_complexity, compute_robustness_metrics
-
-from problems import (
-    SphereFunction, 
-    RastriginFunction, 
-    RosenbrockFunction,
-    AckleyFunction
-)
 
 from algorithms import (
     FireflyAlgorithm,
@@ -172,12 +164,7 @@ class ContinuousExperiment:
 
 def main():
 
-    problems = [
-        SphereFunction(dim=10),
-        RastriginFunction(dim=10),
-        RosenbrockFunction(dim=10),
-        AckleyFunction(dim=10),
-    ]
+    problems = load_testcases("testcases/continuous_testcases.json")
     
     algorithms = [
         FireflyAlgorithm(),

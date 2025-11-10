@@ -1,10 +1,9 @@
 import numpy as np
 import json
-import time
 import os
-from datetime import datetime
 from typing import List, Dict, Any
-from utils import load_json, compute_basic_stats, compute_time_complexity, compute_robustness_metrics, compute_convergence_speed
+from testcases_loader import load_testcases
+from utils import compute_basic_stats, compute_time_complexity, compute_robustness_metrics, compute_convergence_speed
 
 from problems.discrete_prob import (
     TravelingSalesmanProblem,
@@ -133,8 +132,9 @@ class DiscreteExperiment:
         print("="*80)
         
         for problem in self.problems:
+            problem_key = getattr(problem, "test_id", problem.prob_name)
             print("\n" + "-"*80)
-            print(f"Problem: {problem.prob_name} ({self._get_problem_size(problem)})")
+            print(f"Problem: {problem.prob_name} ({self._get_problem_size(problem)}) | ID: {problem_key}")
             print("-"*80)
 
             problem_results = {}
@@ -147,7 +147,7 @@ class DiscreteExperiment:
                 stats = self.run_multiple_experiments(algorithm, problem)
                 problem_results[algorithm.name] = stats
             
-            self.results[problem.prob_name] = problem_results
+            self.results[problem_key] = problem_results
 
         self.summary()
         self.save_results()
@@ -169,36 +169,34 @@ class DiscreteExperiment:
             print(f"\nError saving results to {filepath}: {e}")
     
     def summary(self):
-        """
-        In ra tóm tắt kết quả thí nghiệm.
-        """
         print("\n" + "="*80)
         print("EXPERIMENT SUMMARY")
         print("="*80)
         
-        for problem_name, problem_results in self.results.items():
-            print(f"\n\nProblem: {problem_name}")
+        for problem_id, problem_results in self.results.items():
+            print(f"\n\nProblem: {problem_id}")
             print(f"{'Algorithm':<25} {'Mean Fitness':<15} {'Std Fitness':<12} {'Best Fitness':<12} {'Mean Time (s)':<10}")
             print("-"*80)
             
-            # Sort by mean fitness
+            # ✅ Sắp xếp theo fitness, nếu bằng nhau thì theo time
             sorted_results = sorted(
-                problem_results.items(), 
-                key=lambda x: x[1]['fitness']['mean']
+                problem_results.items(),
+                key=lambda x: (x[1]['fitness']['mean'], x[1]['time']['mean'])
             )
             
             for algo_name, stats in sorted_results:
                 print(f"{algo_name:<25} "
-                      f"{stats['fitness']['mean']:<15.6f} "
-                      f"{stats['fitness']['std']:<12.6f} "
-                      f"{stats['fitness']['min']:<12.6f} "
-                      f"{stats['time']['mean']:<10.4f}")
+                    f"{stats['fitness']['mean']:<15.6f} "
+                    f"{stats['fitness']['std']:<12.6f} "
+                    f"{stats['fitness']['min']:<12.6f} "
+                    f"{stats['time']['mean']:<10.4f}")
             
-            # Best algorithm
             if sorted_results:
                 best_algo = sorted_results[0][0]
                 best_fitness = sorted_results[0][1]['fitness']['mean']
-                print(f"\n  Best: {best_algo} (fitness={best_fitness:.6f})")
+                best_time = sorted_results[0][1]['time']['mean']
+                print(f"\n  Best: {best_algo} (fitness={best_fitness:.6f}, time={best_time:.4f}s)")
+
     
     def _get_problem_size(self, problem):
         """
@@ -213,42 +211,23 @@ class DiscreteExperiment:
 
 def main():
 
-    # Load problems từ testcase
-    tsp_data = load_json('testcases/tsp_test.json')
-    tsp_problem = TravelingSalesmanProblem(
-        n_cities=tsp_data.get('n_cities'),
-        coords=tsp_data.get('coords'),
-        distance_matrix=tsp_data.get('distance_matrix')
-    )
+    # Load testcase
+    dis_problems = load_testcases("testcases/discrete_testcases.json")
     
-    grid_data = load_json('testcases/grid_test.json')
-    grid_problem = GridPathfindingProblem(
-        grid=grid_data.get('grid'),
-        start=tuple(grid_data.get('start')),
-        goal=tuple(grid_data.get('goal'))
-    )
-    
-    problems = [
-        tsp_problem,
-        grid_problem
-    ]
-    
-    algorithms = [
+    dis_algorithms = [
         AntColonyOptimization(),
         SimulatedAnnealing(),
         ACO_Pathfinder(),
         AStar(),
         BFS()
     ]
-
-    experiment = DiscreteExperiment(
-        algorithms=algorithms,
-        problems=problems,
+    disc_experiment = DiscreteExperiment(
+        algorithms=dis_algorithms,
+        problems=dis_problems,
         n_runs=10, 
         max_iter=100
     )
-    
-    experiment.run()
+    disc_experiment.run()
 
 
 if __name__ == "__main__":
