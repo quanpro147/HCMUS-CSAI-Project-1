@@ -45,7 +45,7 @@ def run_all_experiments():
         results_dir=results_dir
     )
     
-    #cont_experiment.run()
+    cont_experiment.run()
     
     # 3. Run discrete experiments
     dis_problems = load_testcases("testcases/discrete_testcases.json")

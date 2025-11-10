@@ -119,6 +119,7 @@ class ContinuousExperiment:
 
         self.summary()
         self.save_results()
+        self.save_results_summary()
         
     def save_results(self, filename: str = None):
 
@@ -160,6 +161,61 @@ class ContinuousExperiment:
             best_algo = sorted_results[0][0]
             best_fitness = sorted_results[0][1]['fitness']['mean']
             print(f"\n  Best: {best_algo} (fitness={best_fitness:.6f})")
+
+    def save_results_summary(self, filename: str = "continuous_summary.json"):
+        """
+        Lưu kết quả tóm tắt (chuẩn benchmark paper) dưới dạng JSON.
+        """
+        filepath = os.path.join(self.results_dir, filename)
+
+        summary_dict = {}
+
+        for problem in self.problems:
+            problem_name = problem.prob_name
+            algos = self.results.get(problem_name, {})
+            dim = getattr(problem, "dim", None)
+            key = f"{problem_name}_dim{dim}"
+
+            summary_dict[key] = {
+                "metadata": {
+                    "problem": problem_name,
+                    "dim": dim,
+                },
+                "results": {}
+            }
+
+            algo_summaries = []
+            for algo_name, stats in algos.items():
+                fitness_stats = stats["fitness"]
+                time_stats = stats["time"]
+
+                algo_summary = {
+                    "name": algo_name,
+                    "mean": round(fitness_stats["mean"], 6),
+                    "std": round(fitness_stats["std"], 6),
+                    "min": round(fitness_stats["min"], 6),
+                    "max": round(fitness_stats["max"], 6),
+                    "median": round(fitness_stats["median"], 6),
+                    "mean_time": round(time_stats["mean"], 6),
+                }
+                summary_dict[key]["results"][algo_name] = algo_summary
+                algo_summaries.append(algo_summary)
+
+            if algo_summaries:
+                best_algo = min(algo_summaries, key=lambda x: x["mean"])
+                summary_dict[key]["best_algorithm"] = {
+                    "name": best_algo["name"],
+                    "mean": best_algo["mean"],
+                    "std": best_algo["std"]
+                }
+
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(summary_dict, f, indent=4, ensure_ascii=False)
+            print(f"Summary results saved to: {filepath}")
+        except Exception as e:
+            print(f"Error saving summary JSON: {e}")
+
 
 
 def main():

@@ -1,5 +1,5 @@
 EXPERIMENT_CONFIG = {
-    'n_runs': 10,
+    'n_runs': 1,
     'max_iter': 100,
     'dimensions': [10, 30],
     'results_dir': 'results',

@@ -178,7 +178,6 @@ class DiscreteExperiment:
             print(f"{'Algorithm':<25} {'Mean Fitness':<15} {'Std Fitness':<12} {'Best Fitness':<12} {'Mean Time (s)':<10}")
             print("-"*80)
             
-            # ✅ Sắp xếp theo fitness, nếu bằng nhau thì theo time
             sorted_results = sorted(
                 problem_results.items(),
                 key=lambda x: (x[1]['fitness']['mean'], x[1]['time']['mean'])
