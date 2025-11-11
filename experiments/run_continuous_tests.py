@@ -105,6 +105,7 @@ class ContinuousExperiment:
         print("="*80)
         
         for problem in self.problems:
+            problem_key = problem.prob_name + "_" + str(problem.dim)
             print("\n" + "-"*80)
             print(f"Problem: {problem.prob_name} (dim={problem.dim})")
             print("-"*80)
@@ -115,7 +116,7 @@ class ContinuousExperiment:
                 stats = self.run_multiple_experiments(algorithm, problem)
                 problem_results[algorithm.name] = stats
             
-            self.results[problem.prob_name] = problem_results
+            self.results[problem_key] = problem_results
 
         self.summary()
         self.save_results()
@@ -163,18 +164,14 @@ class ContinuousExperiment:
             print(f"\n  Best: {best_algo} (fitness={best_fitness:.6f})")
 
     def save_results_summary(self, filename: str = "continuous_summary.json"):
-        """
-        Lưu kết quả tóm tắt (chuẩn benchmark paper) dưới dạng JSON.
-        """
         filepath = os.path.join(self.results_dir, filename)
-
         summary_dict = {}
 
         for problem in self.problems:
             problem_name = problem.prob_name
-            algos = self.results.get(problem_name, {})
             dim = getattr(problem, "dim", None)
             key = f"{problem_name}_dim{dim}"
+            algos = self.results.get(problem_name, {})
 
             summary_dict[key] = {
                 "metadata": {
