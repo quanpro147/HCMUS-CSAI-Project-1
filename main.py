@@ -1,14 +1,6 @@
 import sys
 from config import EXPERIMENT_CONFIG
-from utils import load_json
-
-from problems import (
-    SphereFunction,
-    RastriginFunction,
-    AckleyFunction,
-    TravelingSalesmanProblem,
-    GridPathfindingProblem,
-)
+from testcases_loader import load_testcases
 
 from algorithms import (
     ParticleSwarmOptimization,
@@ -35,51 +27,30 @@ def run_all_experiments():
     results_dir = EXPERIMENT_CONFIG.get('results_dir', 'results')
     
     # 2. Run continuous experiments
-    cont_problems = [
-        SphereFunction(dim=10),
-        RastriginFunction(dim=10),
-        AckleyFunction(dim=10),
+    cont_problems = load_testcases("testcases/continuous_testcases.json")
+    
+    cont_algorithms = [
+        ParticleSwarmOptimization(),
+        ArtificialBeeColony(),
+        FireflyAlgorithm(),
+        CuckooSearch(),
+        HillClimbing(),
     ]
 
-    cont_algorithms = [
-        ParticleSwarmOptimization(), 
-        ArtificialBeeColony(),       
-        FireflyAlgorithm(),          
-        CuckooSearch(),              
-        HillClimbing(),              
-    ]
-    
-    # Create and run continuous experiment
     cont_experiment = ContinuousExperiment(
         algorithms=cont_algorithms,
         problems=cont_problems,
-        n_runs=n_runs,
+        n_runs=n_runs, 
         max_iter=max_iter,
         results_dir=results_dir
     )
+    
     cont_experiment.run()
     
-    # Run discrete experiments
-    tsp_data = load_json('testcases/tsp_test.json')
-    tsp_problem = TravelingSalesmanProblem(
-        n_cities=tsp_data.get('n_cities'),
-        coords=tsp_data.get('coords'),
-        distance_matrix=tsp_data.get('distance_matrix')
-    )
+    # 3. Run discrete experiments
+    dis_problems = load_testcases("testcases/discrete_testcases.json")
     
-    grid_data = load_json('testcases/grid_test.json')
-    grid_problem = GridPathfindingProblem(
-        grid=grid_data.get('grid'),
-        start=tuple(grid_data.get('start')),
-        goal=tuple(grid_data.get('goal'))
-    )
-
-    problems = [
-        tsp_problem,
-        grid_problem
-    ]
-    
-    algorithms = [
+    dis_algorithms = [
         AntColonyOptimization(),
         SimulatedAnnealing(),
         ACO_Pathfinder(),
@@ -87,8 +58,8 @@ def run_all_experiments():
         BFS()
     ]
     disc_experiment = DiscreteExperiment(
-        algorithms=algorithms,
-        problems=problems,
+        algorithms=dis_algorithms,
+        problems=dis_problems,
         n_runs=10, 
         max_iter=100
     )
@@ -104,15 +75,15 @@ def main():
     try:
         run_all_experiments()
         print("\n" + "="*80)
-        print("✅ ALL EXPERIMENTS COMPLETED SUCCESSFULLY!")
+        print("ALL EXPERIMENTS COMPLETED SUCCESSFULLY!")
         print("="*80)
 
     except KeyboardInterrupt:
-        print("\n⚠️  Experiment interrupted by user.")
+        print("\n  Experiment interrupted by user.")
         sys.exit(1)
 
     except Exception as e:
-        print(f"\n❌ Error occurred: {e}")
+        print(f"\n Error occurred: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

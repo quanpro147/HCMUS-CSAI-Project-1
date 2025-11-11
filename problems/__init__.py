@@ -2,7 +2,6 @@ from .base_problem import BaseProblem, ContinuousProblem, DiscreteProblem
 from .continuous_prob import (
     SphereFunction,
     RastriginFunction,
-    RosenbrockFunction,
     AckleyFunction
 )
 from .discrete_prob import (
@@ -17,7 +16,6 @@ __all__ = [
     # Continuous problems
     'SphereFunction',
     'RastriginFunction',
-    'RosenbrockFunction',
     'AckleyFunction',
     # Discrete problems
     'TravelingSalesmanProblem',

@@ -1,0 +1,107 @@
+{
+  "Sphere": {
+    "type": "continuous",
+    "tests": [
+      {
+        "dim": 10,
+        "bound": [
+          -5.12,
+          5.12
+        ],
+        "shift": false,
+        "rotate": false,
+        "optimum": 0.0
+      },
+      {
+        "dim": 30,
+        "bound": [
+          -5.12,
+          5.12
+        ],
+        "shift": true,
+        "rotate": false,
+        "optimum": 0.0
+      },
+      {
+        "dim": 50,
+        "bound": [
+          -5.12,
+          5.12
+        ],
+        "shift": true,
+        "rotate": true,
+        "optimum": 0.0
+      }
+    ]
+  },
+  "Rastrigin": {
+    "type": "continuous",
+    "tests": [
+      {
+        "dim": 10,
+        "bound": [
+          -5.12,
+          5.12
+        ],
+        "shift": false,
+        "rotate": false,
+        "optimum": 0.0
+      },
+      {
+        "dim": 30,
+        "bound": [
+          -5.12,
+          5.12
+        ],
+        "shift": true,
+        "rotate": false,
+        "optimum": 0.0
+      },
+      {
+        "dim": 50,
+        "bound": [
+          -5.12,
+          5.12
+        ],
+        "shift": true,
+        "rotate": true,
+        "optimum": 0.0
+      }
+    ]
+  },
+  "Ackley": {
+    "type": "continuous",
+    "tests": [
+      {
+        "dim": 10,
+        "bound": [
+          -32.768,
+          32.768
+        ],
+        "shift": false,
+        "rotate": false,
+        "optimum": 0.0
+      },
+      {
+        "dim": 30,
+        "bound": [
+          -32.768,
+          32.768
+        ],
+        "shift": true,
+        "rotate": false,
+        "optimum": 0.0
+      },
+      {
+        "dim": 50,
+        "bound": [
+          -32.768,
+          32.768
+        ],
+        "shift": true,
+        "rotate": true,
+        "optimum": 0.0
+      }
+    ]
+  }
+}

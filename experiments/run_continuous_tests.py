@@ -1,17 +1,9 @@
 import numpy as np
 import json
-import time
-from datetime import datetime
 from typing import List, Dict, Any
 import os
+from testcases_loader import load_testcases
 from utils import compute_basic_stats, compute_convergence_speed, compute_time_complexity, compute_robustness_metrics
-
-from problems import (
-    SphereFunction, 
-    RastriginFunction, 
-    RosenbrockFunction,
-    AckleyFunction
-)
 
 from algorithms import (
     FireflyAlgorithm,
@@ -113,6 +105,7 @@ class ContinuousExperiment:
         print("="*80)
         
         for problem in self.problems:
+            problem_key = problem.prob_name + "_" + str(problem.dim)
             print("\n" + "-"*80)
             print(f"Problem: {problem.prob_name} (dim={problem.dim})")
             print("-"*80)
@@ -123,10 +116,11 @@ class ContinuousExperiment:
                 stats = self.run_multiple_experiments(algorithm, problem)
                 problem_results[algorithm.name] = stats
             
-            self.results[problem.prob_name] = problem_results
+            self.results[problem_key] = problem_results
 
         self.summary()
         self.save_results()
+        self.save_results_summary()
         
     def save_results(self, filename: str = None):
 
@@ -169,15 +163,61 @@ class ContinuousExperiment:
             best_fitness = sorted_results[0][1]['fitness']['mean']
             print(f"\n  Best: {best_algo} (fitness={best_fitness:.6f})")
 
+    def save_results_summary(self, filename: str = "continuous_summary.json"):
+        filepath = os.path.join(self.results_dir, filename)
+        summary_dict = {}
+
+        for problem in self.problems:
+            problem_name = problem.prob_name
+            dim = getattr(problem, "dim", None)
+            key = f"{problem_name}_dim{dim}"
+            algos = self.results.get(problem_name, {})
+
+            summary_dict[key] = {
+                "metadata": {
+                    "problem": problem_name,
+                    "dim": dim,
+                },
+                "results": {}
+            }
+
+            algo_summaries = []
+            for algo_name, stats in algos.items():
+                fitness_stats = stats["fitness"]
+                time_stats = stats["time"]
+
+                algo_summary = {
+                    "name": algo_name,
+                    "mean": round(fitness_stats["mean"], 6),
+                    "std": round(fitness_stats["std"], 6),
+                    "min": round(fitness_stats["min"], 6),
+                    "max": round(fitness_stats["max"], 6),
+                    "median": round(fitness_stats["median"], 6),
+                    "mean_time": round(time_stats["mean"], 6),
+                }
+                summary_dict[key]["results"][algo_name] = algo_summary
+                algo_summaries.append(algo_summary)
+
+            if algo_summaries:
+                best_algo = min(algo_summaries, key=lambda x: x["mean"])
+                summary_dict[key]["best_algorithm"] = {
+                    "name": best_algo["name"],
+                    "mean": best_algo["mean"],
+                    "std": best_algo["std"]
+                }
+
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(summary_dict, f, indent=4, ensure_ascii=False)
+            print(f"Summary results saved to: {filepath}")
+        except Exception as e:
+            print(f"Error saving summary JSON: {e}")
+
+
 
 def main():
 
-    problems = [
-        SphereFunction(dim=10),
-        RastriginFunction(dim=10),
-        RosenbrockFunction(dim=10),
-        AckleyFunction(dim=10),
-    ]
+    problems = load_testcases("testcases/continuous_testcases.json")
     
     algorithms = [
         FireflyAlgorithm(),
