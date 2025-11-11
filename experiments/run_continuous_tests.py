@@ -120,7 +120,6 @@ class ContinuousExperiment:
 
         self.summary()
         self.save_results()
-        self.save_results_summary()
         
     def save_results(self, filename: str = None):
 
