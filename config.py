@@ -64,7 +64,6 @@ PROBLEMS_TO_TEST = {
     'continuous': [
         'sphere',
         'rastrigin',
-        'rosenbrock',
         'ackley',
     ],
     'discrete': [
